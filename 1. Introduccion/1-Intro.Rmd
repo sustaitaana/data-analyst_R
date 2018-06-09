@@ -360,7 +360,7 @@ A entregar máximo el viernes **15 de junio 2018** 23:59:59 CST en el repo de la
 
 + Baja el repositorio de la clase en tu compu (clone) [https://github.com/sustaitaana/data-analyst_R](https://github.com/sustaitaana/data-analyst_R)
 + Crea un branch con tu nombre feature/tunombre
-+ Dentro de la carpeta **alumnos**, crea una carpeta con tu nombre (ejemplo: ana_sustaita) ahí, genera un Rmd/org/txt (nómbralo como presentación.Rmd/org/txt) que contenga:
++ Dentro de la carpeta **alumnos**, crea una carpeta con tu nombre (ejemplo: ana_sustaita) ahí, genera un Rmd/org/txt (nómbralo como presentacion.Rmd/org/txt) que contenga:
     + tu nombre completo
     + edad
     + si trabajas o no, si trabajas indica en dónde
