@@ -154,7 +154,7 @@ En esta solución existe un solo servidor que tiene las versiones de los archivo
 
 El problema de esta solución es que hay un punto de falla, el servidor central, sin servidor no hay administración de versiones ni versiones por lo que si le llega a pasar algo al servidor central... PÁNICO! 
 
-Por ejemplo: si por alguna razón el servidor se cae una hora, el equipo no puede subir actualizaciones, o bajar archivos para trabajar. No está por demás mencionar que es buena práctica generar un respaldo de lo que contiene el server para evitar perder toda la historia y poder recuperar información en caso de algún problema.
+Por ejemplo: si por alguna razón el servidor se cae una hora, el equipo no puede subir actualizaciones o bajar archivos para trabajar. No está por demás mencionar que es buena práctica generar un respaldo de lo que contiene el server para evitar perder toda la historia y poder recuperar información en caso de algún problema.
 
 ![](../images/centralized_version_control.png)
 
@@ -163,11 +163,11 @@ Por ejemplo: si por alguna razón el servidor se cae una hora, el equipo no pued
 
 #### Controlador de versiones distribuido
 
-En este tipo de administración de control de versiones no hay como tal un servidor central, todos los *clientes* tienen una copia del repositorio **completa** localmente, esto resuelve el problema de que si el servidor central se cae -aunque aquí no hay servidor central-, tu puedes seguir trabajando. Por otro lado, si el *servidor* de alguno de los clientes se muere y estaba colaborando en alguno de los repositorios... es posible que algún otro cliente pueda regresar lo perdido al servidor ya que todos tienen una copia local completa. 
+En este tipo de administración de control de versiones no hay como tal un servidor central, todos los *clientes* tienen una copia del repositorio **completa** localmente, esto resuelve el problema de que si el servidor central se cae -aunque aquí no hay servidor central- tu puedes seguir trabajando. Por otro lado, si el *servidor* de alguno de los clientes se muere y estaba colaborando en alguno de los repositorios, es posible que algún otro cliente pueda regresar lo perdido al servidor ya que todos tienen una copia local completa.
 
 Esta es la manera en la que Git, Mercurial, Bazaar y otros de los administradores de versiones más actuales funcionan, y es por mucho la forma más utilizada actualmente de administración de control de versiones.
 
-Solo por no dejarlo en el implícito ... puedes trabajar en más de un proyecto al mismo tiempo teniendo muchos repositorios locales en tu máquina sin entrar en ningún conflicto.
+Sólo por no dejarlo en el implícito, puedes trabajar en más de un proyecto al mismo tiempo teniendo muchos repositorios locales en tu máquina sin entrar en ningún conflicto.
 
 ![](../images/distributed_version_control.png)
 
@@ -193,7 +193,7 @@ La mayoría de los controladores de versiones piensan en los datos que administr
 
 Git piensa los datos como un flujo de snapshots. 
 
-En git se guardan snapshots -fotografías- del estado completo de un sistema de archivos -repositorio-, cada vez que guardamos los cambios git guarda como snapshot el estado de como se ven todos los archivos localmene del repositorio en el que te encuentras trabajando y guarda una referencia a ese snapshot; si un archivo no cambió en el momento de tomar el snapshot git no guarda el archivo de nuevo, solo deja una referencia al archivo original (la liga al snapshot que guarda ese archivo...seguro alguna vez cambio o alguna vez fue creado). 
+En git se guardan snapshots -fotografías- del estado completo de un sistema de archivos -repositorio-. Cada vez que guardamos los cambios, git guarda como snapshot el estado de cómo se ven todos los archivos localmente del repositorio en el que te encuentras trabajando y guarda una referencia a ese snapshot; si un archivo no cambió en el momento de tomar el snapshot, git no guarda el archivo de nuevo, sólo deja una referencia al archivo original (la liga al snapshot que guarda ese archivo seguro alguna vez cambio o fue creada). 
 
 ![](../images/snapshots_files.png)
 
@@ -201,15 +201,14 @@ En git se guardan snapshots -fotografías- del estado completo de un sistema de 
 
 **Características de Git**
 
-+ **Velocidad:** Al tener una copia completa del repositorio remoto en tu máquina local, todos los cambios que realizan se guardan localmente, lo que hace que cualquier cambio realizado y registrado sea muy rápido, en los VCS tradicionales los cambios se hacen a una repositorio remoto por lo que mandar los cambios requieren de tener una conexión a internet y eso ya implica una latencia.
++ **Velocidad:** Al tener una copia completa del repositorio remoto en tu máquina local, todos los cambios que realizas se guardan localmente, lo que hace que cualquier cambio realizado y registrado sea muy rápido, en los VCS tradicionales los cambios se hacen a un repositorio remoto por lo que mandarlos requieren de una conexión a internet y eso ya implica una latencia.
 
-Si por ejemplo quisieras saber la historia de un archivo, git tiene el historial localmente y no requiere de solicitar nada al repositorio remoto. 
+Si, por ejemplo, quisieras saber la historia de un archivo, git tiene el historial localmente y no requiere de solicitar nada al repositorio remoto. 
++ **Offline:** Debido a que la copia es local NO necesitas estar conectado a internet para seguir avanzando en lo que estés trabajando y guarda los cambios localmente para que después teniendo una conexión los subas al repositorio remoto.
 
-+ **Offline:** Debido a que la copia es local NO necesitas estar conectado a internet para seguir avanzando en lo que estes trabajando y guardar los cambios localmente para que después teniendo una conexión los subas al repositorio remoto.
++ **Integridad:** Cada cambio realizado en git tiene asociado un *check sum* generado con un SHA-1 (hash de 40 caracteres hexadecimales) por lo que siempre se utiliza este *check sum* para referenciar cambios/archivos, no hay forma de hacer un cambio sin que Git esté enterado del mismo y lo haya registrado. Esta característica permite que no existan archivos corruptos o cambios que se pierdan en tránsito. 
 
-+ **Integridad:** Cada cambio realizado en git tiene asociado un *check sum* generado con un SHA-1 (hash de 40 caracteres hexadecimales) por lo que siempre se utiliza este *check sum* para referenciar cambios/archivos, no puede haber forma de hacer un cambio sin que Git este enterado del mismo y lo haya registrado. Esta característica permite que no existan archivos corruptos o cambios que se pierdan en tránsito. 
-
-+ **Guardado:** Cada vez que guardas un cambio en Git se genera el hash por cada archivo cambiado en el snapshot y el hash asociado es guardado en una base de datos. Es por este hash que es MUY DIFICIL que haya cosas que no puedas regresar en Git después de cajetearla en algo, eso brinda más flexibilidad a los miembros de un equipo de desarrollo pues las probabilidades de que algo que hagan sea terrible y no se pueda recuperar/eliminar son muy bajas. 
++ **Guardado:** Cada vez que guardas un cambio en Git se genera el hash por cada archivo cambiado en el snapshot y el hash asociado es guardado en una base de datos. Es por este hash que es MUY DIFÍCIL que haya cosas que no puedas regresar en Git después de equivocarte en algo, eso brinda más flexibilidad a los miembros de un equipo de desarrollo pues la probabilidad de que algo que hagan sea terrible y no se pueda recuperar/eliminar es muy baja. 
 
 **Estados**
 
@@ -219,7 +218,7 @@ En Git los archivos pueden estar en 3 estados (principalmente)
 
 2. **Modified:** Los cambios realizados localmente son identificados por git pero aún NO han sido guardados en la base de datos local de git por lo que pueden perderse.
 
-3. **Staged:** Archivos que modificaste localmente y que le haz hecho saber a git que los guarde en la base de datos local y formaran parte del snapshot actual -el que subirás a repositorio remoto-.
+3. **Staged:** Archivos que modificaste localmente y que le has hecho saber a git que los guarde en la base de datos local y formarán parte del snapshot actual -el que subirás al repositorio remoto-.
 
 Estos 3 estados provocan que en un proyecto de git haya 3 secciones: 
 
@@ -229,9 +228,9 @@ Estos 3 estados provocan que en un proyecto de git haya 3 secciones:
 
 **Workflow**
 
-1. Modificas archivos en tu *working directory*
-2. Pones estos archivos cambiados en stage para enterar a Git de los cambios que formarán parte del siguiente snapshot
-3. Haces commit para que git haga el snapshot del estado actual y registre los cambios en la base de datos y git sepa que cosas debe subir en tu siguiente registro de cambios al repositorio remoto
+1. Modificas archivos en tu *working directory*.
+2. Pones estos archivos cambiados en stage para enterar a Git de los cambios que formarán parte del siguiente snapshot.
+3. Haces commit para que git haga el snapshot del estado actual y registre los cambios en la base de datos y git sepa qué cosas debe subir en tu siguiente registro de cambios al repositorio remoto.
 
 
 **Verbos básicos** 
@@ -242,34 +241,34 @@ Estos 3 estados provocan que en un proyecto de git haya 3 secciones:
 
 + `pull`: Bajar los cambios remotos del repositorio en el que estoy trabajando (para tener los cambios de los demás) a mi copia local `git pull <nombre de branch>`
 
-+ `push`: Subir mis cambios locales al repositorio remoto (para que todos los demás puedan después bajar mis cambios) `git push <nonmbre de branch>`
-
 + `add`: Agregar un archivo a la base de datos de git para que le haga seguimiento `git add <ruta/archivo(s)>`
 
 + `commit`: Guardar los cambios (snapshots) que he realizado localmente para después subirlos al repositorio remoto `git commit -m "message"`
+
++ `push`: Subir mis cambios locales al repositorio remoto (para que todos los demás puedan después bajar mis cambios) `git push <nonmbre de branch>`
 
 + `branch`: Listar las ramas que existen en el repositorio (locales y/o remotas) `git branch` ver el cheat sheet para todas las opciones
 
 + `merge`: En caso de conflicto entre tus cambios locales y los que existen remotamente se debe hacer un arreglo *manual* juntando los cambios locales con los que existen remotamente `git merge`. Se recomienda instalar [meld](http://meldmerge.org/) como herramienta de merge. 
 
-![](../images/pointer.png) En las referencias está la liga a cómo configurar git para que ocupe meld como la herramienta de merge.
+![](../images/pointer.png) En las referencias está la liga a cómo configurar git para que ocupe *meld* como la herramienta de merge.
 
 + `stash`: Cuando tienes cambios en tu local que no quieres que se vayan en el siguiente push pero que se queden registrados en tu snapshot para después poder recuperarlos. `git stash` y después `git  stash apply` (ver que hay en stash `git stash list`)
 
 + `log`:  Ver el historial de cambios realizados (localmente) `git log` o de un archivo en particular `git log -p <file>`
 
-+ `status`: Saber qué archivos han sido modificados/eliminados o qué cambios que aún no han sido regristrados (archivos nuevos) `git status`
++ `status`: Saber qué archivos han sido modificados/eliminados o qué cambios aún no han sido regristrados (archivos nuevos) `git status`
 
 + `help`: Solicitar ayuda para conocer los parámetros de algún verbo `git <verbo> --help`
 
-+ `blame`: El más lindo de todos los comandos!!! Saber quién cambio qué y cuándo (╯°□°)╯︵ ┻━┻   `git blame <file>`
++ `blame`: El más lindo de todos los comandos! Saber quién cambio qué y cuándo `git blame <file>`
 
 ![](../images/pointer.png) En la referencias viene la liga al *cheat sheet* de Git
 
 
 ### GitHub - Bitbucket
 
-Git normalmente se utiliza a través de línea de comandos y GitHub es un website donde puedes poner tus repositorios y tener una GUI con la cuál interactuar -normalmente ocupas una combinación entre línea de comando (para administrar tus cambios locales) y la GUI para solicitar revisiones de código (Pull Request)-.
+Git normalmente se utiliza a través de línea de comandos y GitHub es un website donde puedes poner tus repositorios y tener una GUI con la cual interactuar -normalmente ocupas una combinación entre línea de comando (para administrar tus cambios locales) y la GUI para solicitar revisiones de código (Pull Request)-.
 
 ![](../images/github_logo.png)
 
@@ -279,50 +278,45 @@ BitBucket es otro GUI (website) donde puedes poner tus repositorios de git
 
 **Características:** 
 
-+ GitHub y Bitbucket permiten aǹadir características al Git que facilitan la administración de repositorios en equipos de desarrollo
++ GitHub y Bitbucket permiten añadir características al Git que facilitan la administración de repositorios en equipos de desarrollo
 
 + Requires una cuenta para poder utilizar GitHub y Bitbucket
 
-+ BitBucket te permite crear repositorios públicos y privados gratuitamente pero solo permite tener 5 miembros a los más colaborando en un repo de forma gratuita.
++ Bitbucket te permite crear repositorios públicos y privados gratuitamente pero sólo permite tener 5 miembros a los más colaborando en un repo de forma gratuita.
 
-+ GitHub te permite crear repositorios públicos gratuitamente, pero para generar repositorios privados debes pagar ($7 dolares mensuales para usuarios ;), diferente pricing para compaǹías) aquí no hay un máximo de colaboradores para un repo -público o privado-.
++ GitHub te permite crear repositorios públicos gratuitamente, pero para generar repositorios privados debes pagar ($7 dolares mensuales para usuarios, diferente pricing para compañías) aquí no hay un máximo de colaboradores para un repo -público o privado-.
 
-+ GitHub es el más ocupado en la industria, tiene alrededor de 14 millones de repositorios hosteados O.o
++ GitHub es el más ocupado en la industria, tiene alrededor de 14 millones de repositorios hosteados.
 
 ![](../images/github_prices.png)
 
 
 **Argot**
 
-+ **Repositorio:** Donde todos los archivos correspondientes a un proyecto son almacenados, se genera una URL única por repo. Normalmente se tiene un repositorio por proyecto, pero esto puedec complicarse dependiendo de la compaǹía. Por ejemplo, imagina que trabajas en Mozilla, hay un solo producto -FireFox- pero seguro muchos desarrollos con diferenntes objetivos, ¿cómo administrarías el codigo asociado? ¿Un solo repo, y muchas ramas por objetivo -cada rama tendría que ser subdividida en master, develop y etc...-? o muchos repos uno por cada objetivo aunque sea el mismo producto?. Ejemplo. 
++ **Repositorio:** Donde todos los archivos correspondientes a un proyecto son almacenados, se genera una URL única por repo. Normalmente se tiene un repositorio por proyecto, pero esto puede complicarse dependiendo de la compañía. Por ejemplo, imagina que trabajas en Mozilla, hay un solo producto -FireFox- pero seguro muchos desarrollos con diferentes objetivos, ¿cómo administrarías el código asociado? ¿Un solo repo, y muchas ramas por objetivo -cada rama tendría que ser subdividida en master, develop, etc.-? O ¿muchos repos uno por cada objetivo aunque sea el mismo producto?. 
 
-* **Fork:** Cuando creas un proyecto nuevo basado en un proyecto existente. Esto se hace cuando quieres agregar funcionalidad a un proyecto existente, pero no formas parte del equipo de desarrollo directamente. O bien cuando solo quieres copiar un repo para experimentar por tu lado *sin* afectar el repositorio original -que seguramente es de alguien más-. Ejemplo. 
+* **Fork:** Cuando creas un proyecto nuevo basado en un proyecto existente. Esto se hace cuando quieres agregar funcionalidad a un proyecto existente, pero no formas parte del equipo de desarrollo directamente. O bien cuando sólo quieres copiar un repo para experimentar por tu lado *sin* afectar el repositorio original -que seguramente es de alguien más-.
 
-+ **Pull Request:** Solicitar revisión de los cambios que realizaste, el objetivo es que todos cumplan un estándar de programación y que alguien que no hizo el código verifique desde un punto de vista no sesgado si la solución es correcta, eficiente y cumple con los estándares del lenguaje de programaciónn, del equipo de desarrollo y de la compaǹía; si alguno de los estándares no fue cumplido se dejan comentarios de los que revisan el código y solicitan cambios. Si todos los estándares son cumplidos el pull request es aprovado y entonces es posible cerrar el branch asociado y mergearlo a la rama de develop. 
-    + Ejemplo pull request
-    + Ejemplo comentarios y rechazo
-    + Ejemplo aprovado
-  
++ **Pull Request:** Solicitar revisión de los cambios que realizaste, el objetivo es que todos cumplan un estándar de programación y que alguien que no hizo el código verifique desde un punto de vista no sesgado si la solución es correcta, eficiente y cumple con los estándares del lenguaje de programación, del equipo de desarrollo y de la compañía; si alguno de los estándares no fue cumplido se dejan comentarios de los que revisan el código y solicitan cambios. Si todos los estándares son cumplidos el pull request es aprovado y entonces es posible cerrar el branch asociado y mergearlo a la rama de develop. 
 
 ### Estrategia recomendada de trabajo en Git
 
-Cuando estas en un equipo de trabajo las cosas se empiezan a complicar ya que todos están trabajando en paralelo ya sea sobre un mismo problema/proyecto o sobre diferentes partes de él. 
+Cuando estás en un equipo de trabajo las cosas se empiezan a complicar ya que todos están trabajando en paralelo ya sea sobre un mismo problema/proyecto o sobre diferentes partes de él. 
 
 Para administrar correctamente los cambios y que el equipo trabaje eficientemente se recomienda seguir el siguiente modelo de trabajo en git con varios branches. 
 
 Ramas:
 
 + `master`: La rama que está en producción 
-+ `develop`: La rama a la que vas agregando tus cambios (preproducción) y todos los demás! 
++ `develop`: La rama a la que vas agregando tus cambios (preproducción) y todos los demás.
 + branches de issues/tasks, si estas ocupando git-flow entonces:
-   + `feature/issue-number`: Cuando estas agregando funcionalidad que aún no están en producción
-   + `hotfix/issue-number`: Cuando arraglas un bug que existe en producción
-   + `release/tag`: cuando vas a liberar cambios completos a producción
+   + `feature/issue-number`: Cuando estás agregando funcionalidad que aún no está en producción
+   + `hotfix/issue-number`: Cuando arreglas un bug que existe en producción
+   + `release/tag`: Cuando vas a liberar cambios completos a producción
 
 ![](../images/branches_strategy.png)
 
-
-Cuando hagas merge de tu rama a la rama de develop -SOLO debes hacer merge a la rama de develop, y una vez que haz hecho Pull Request y tu Pull Request ha sido APROBADO!- hazlo con la bandera *no fast forward* `no-ff` para que quede registro de que existió tu rama y que luego la uniste a develop, sin esta bandera no queda registro de tu rama y pareciera que siempre trabajaste en develop... not cool! (git flow hace esto por ti :))
+Cuando hagas merge de tu rama a la rama de develop -SÓLO debes hacer merge a la rama de develop, y una vez que has hecho Pull Request y tu Pull Request ha sido APROBADO!- hazlo con la bandera *no fast forward* `no-ff` para que quede registro que existió tu rama y que luego la uniste a develop, sin esta bandera no queda registro de tu rama y pareciera que siempre trabajaste en develop (git flow hace esto por ti).
 
 ![](../images/merge_no_ff.png)
 
@@ -331,31 +325,30 @@ Cuando hagas merge de tu rama a la rama de develop -SOLO debes hacer merge a la 
 
 ### Git Flow 
 
-Es una extensión de los comandos de git que permiten trabajar de manera más sencilla con flujos de trabajo en equipo con git. 
+Es una extensión de los comandos de git que permiten trabajar de manera más sencilla con flujos de trabajo en equipo. 
 
 En particular facilita la creación de ramas, administrar tus cambios a la rama que creaste, al cerrar un issue/task/bug se hará cargo de subir los cambios a la rama, hacerles merge con la rama develop y borrar la rama remota (con la bandera de *no fast forward* `no-ff`)
 
-El uso de git-flow es completamene opcional pero facilita mucho el uso de git en el día a día con equipos de trabajo
-
+El uso de git-flow es completamene opcional pero facilita mucho el uso de git en el día a día con equipos de trabajo.
 
 ### Reglas de etiqueta en Git
 
 <div style="background-color:#ffcf40">
-+ Antes de hacer push **PRIMERO** baja todos los cambios del repositorio remoto ... -pull- de esta manera si hay conflictos los puedes resolver antes de cajetearla y dejar un desma en el remoto y se rompan las cosas!!! $\rightarrow$ recuerda que hay un comando blame!! siempre se pueden encontrar al que la cajeteo... Es una práctica común que quien rompe el repo paga las chelas! `git  pull`
++ Antes de hacer push **PRIMERO** baja todos los cambios del repositorio remoto -pull- de esta manera si hay conflictos los puedes resolver antes de equivocarte y dejar un desastre en el remoto y se rompan las cosas! $\rightarrow$ recuerda que hay un comando blame! siempre se puede encontrar al quien se equivocó. Es una práctica común que quien rompe el repo paga las chelas! `git  pull`
 
-+ Siempre que hagas un commit **COMÉNTALO**, esto es, agrega un comentario que indique qué demonios hiciste, cuáles son tus cambios! `git commit -m "your comment in here"`. Es práctica común que los comentarios se hacen en inglés por aquello de que es muy seguro que formes parte de equipos multidiciplinarios y multinacionales :) 
++ Siempre que hagas un commit **COMÉNTALO**, esto es, agrega un comentario que indique qué demonios hiciste, cuáles son tus cambios! `git commit -m "your comment in here"`. Es práctica común que los comentarios se hacen en inglés por aquello de que es muy seguro que formes parte de equipos multidiciplinarios y multinacionales.
 
-+ No es necesiario que juntes todos tus cambios (10 por ejemplo) y los subas en un solo commit, si los cambios no están muy relacionados puedes ir haciendo commits por partes para que varios archivos que tienen cambios relacionados queden registrados en un solo comentario de commit... eso le ayuda a todo el equipo a ver archivos que cambian juntos... más tarde veremos que esto sucede en automático al solicitar un **Pull Request**
++ No es necesiario que juntes todos tus cambios (10 por ejemplo) y los subas en un solo commit, si los cambios no están muy relacionados puedes ir haciendo commits por partes para que varios archivos que tienen cambios relacionados queden registrados en un solo comentario, eso le ayuda a todo el equipo a ver archivos que cambian juntos. Más tarde veremos que esto sucede en automático al solicitar un **Pull Request**.
 
-+ Todos los días antes de iniciar tus cambios en el repo inicia con un git pull!!! 
++ Todos los días antes de iniciar tus cambios en el repo inicia con un git pull!
 
-+ No se te olvide agregar tus cambios a la base de datos local!!! de otra manera puedes perder tus cambios... `git add archivos_modificados.*` seguido de un `git commit -m "your comments in here"`
++ No se te olvide agregar tus cambios a la base de datos local! De otra manera puedes perderlos `git add archivos_modificados.*` seguido de un `git commit -m "your comments in here"`
 
-+ Si la cajeteaste y no sabes cómo arreglar el asunto, pide ayuda a alguien en tu equipo con más experiencia
++ Si te equivocaste y no sabes cómo arreglar el asunto, pide ayuda a alguien en tu equipo con más experiencia
 
 + Sigue el sistema de desarrollo que vimos -ramas para cada issue/task- develop y master, facilita **ENORMEMENTE** el trabajo en equipo
 
-+ Cuando ya tienes todos los cambios que necesitas para completar un task/issue/bug/etc siempre solicita un Pull Request para que tus cambios sean revisados y aprobados ANTES de que los subas al repositorio remoto $\rightarrow$ cuando solicites el pull request toma como base la rama DEVELOP!!!! ¿por qué se te ocurre que sea tomando como base develop?
++ Cuando ya tienes todos los cambios que necesitas para completar un task/issue/bug/etc siempre solicita un Pull Request para que tus cambios sean revisados y aprobados ANTES de que los subas al repositorio remoto $\rightarrow$ cuando solicites el Pull Request toma como base la rama DEVELOP! ¿por qué se te ocurre que sea tomando como base develop?
 
 + Cuando terminas un issue pon en el comentario de cierre de task/issue `closes #<numero de issue>` eso permitirá que git cierre automáticamente los issues asociados 
 
@@ -363,18 +356,19 @@ El uso de git-flow es completamene opcional pero facilita mucho el uso de git en
 
 ### Tarea 
 
-A entregar máximo el domingo **27 de agosto 2017** 23:59:59 CST en el repo de la clase
+A entregar máximo el viernes **15 de junio 2018** 23:59:59 CST en el repo de la clase
 
-+ Baja el repositorio de la materia en tu compu (clone) [https://github.com/silil/mineriaDatosITAM_agodic17](https://github.com/silil/mineriaDatosITAM_agodic17)
-+ En la carpeta **alumnos** genera un Rmd/org/txt que contenga:
-    + tu nombre
++ Baja el repositorio de la clase en tu compu (clone) [https://github.com/sustaitaana/data-analyst_R](https://github.com/sustaitaana/data-analyst_R)
++ Crea un branch con tu nombre feature/tunombre
++ Dentro de la carpeta **alumnos**, crea una carpeta con tu nombre (ejemplo: ana_sustaita) ahí, genera un Rmd/org/txt (nómbralo como presentación.Rmd/org/txt) que contenga:
+    + tu nombre completo
     + edad
     + si trabajas o no, si trabajas indica en dónde
-    + carrera(s) que estas estudiando
-    + semestre en el que estas
-+ Una vez que creaste tu archivo guarda tu archivo a tu base de datos local (add, commit) y solicítame un pull request
-+ Hasta que haya aprobado tus cambios súbelos al repositorio remoto (push)
-+ Antes de hacer cualquier cosa recuerda hacer `git pull`!!!!
+    + carrera(s) que estás estudiando o estudiaste
+    + si sigues estudiando, semestre en el que estás
++ Una vez que creaste tu archivo guarda tu archivo a tu base de datos local y súbelos al remoto (add, commit, push) después, solicítame un Pull Request (no olvides tomar como base DEVELOP)
++ Hasta que haya aprobado tus cambios, mergealos a develop
++ Antes de hacer cualquier cosa recuerda hacer `git pull`!
 
 ***
 
