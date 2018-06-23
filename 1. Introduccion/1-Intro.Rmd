@@ -50,7 +50,7 @@ output:
     + Referencias 
 
 2. Bases de Datos
-    + Modelo Relacional
+    + Modelo de Datos
     + Llaves primarias y foráneas
     + Formas normales
     + SGBD
@@ -395,51 +395,391 @@ A entregar máximo el viernes **15 de junio 2018** 23:59:59 CST en el repo de la
 
 ## Bases
 
-### Modelo Relacional
+***
+![](../images/database.jpeg)
+
+Una base de datos es una colección de datos organizados, los datos son una colección de hechos y cifras que pueden procesarse para producir información.
+
+La mayoría de los datos representan hechos que fueron "grabados". Los datos ayudan a producir información, que se basa en estos hechos. Por ejemplo, si tenemos datos sobre las calificaciones obtenidas por un grupo de estudiantes, podemos concluir cuál es la calificaión promedio.
+***
+
+### SGBD 
+
+Un sistema de gestión de bases de datos almacena datos de tal manera que resulta más fácil recuperar, manipular y producir información.
+
+#### Características
+
+Un sistema de gestión de bases de datos moderno tiene las siguientes características:
+
++ **Entidad del mundo real**: Es más realista y utiliza entidades del mundo real para diseñar su arquitectura. Utiliza el comportamiento y los atributos también. Por ejemplo, una base de datos escolar puede usar estudiantes como una entidad y su edad como un atributo.
+
++ **Tablas basadas en relaciones**: Permite que las entidades y las relaciones entre ellas formen tablas. Un usuario puede entender la arquitectura de una base de datos con solo mirar los nombres de la tabla.
+
++ **Aislamiento de datos y aplicación**: un sistema de base de datos es completamente diferente de sus datos. Una base de datos es una entidad activa, mientras que los datos son pasivos y la base de datos funciona y se organiza.
+
++ **Menos redundancia**: Sigue las reglas de normalización, que divide una relación cuando cualquiera de sus atributos tiene redundancia en los valores. La *normalización* es un proceso matemáticamente rico y científico que reduce la redundancia de datos.
+
++ **Consistencia**: la consistencia es un estado en el que todas las relaciones en una base de datos se mantienen consistentes. Existen métodos y técnicas que pueden detectar el intento de dejar la base de datos en un estado incoherente.
+
++ **Lenguaje de consulta**: Está equipado con lenguaje de consulta, lo que lo hace más eficiente para recuperar y manipular datos. Un usuario puede aplicar tantas y tantas opciones de filtrado como sea necesario para recuperar un conjunto de datos.
+
++ **ACID**: Sigue los conceptos de **A**tomicidad, **C**onsistencia, **A**islamiento y **D**urabilidad (normalmente abreviado como ACID por sus siglas en inglés). Estas propiedades ayudan a que la base de datos se mantenga saludable en entornos de múltiples transacciones y en caso de falla.
+
+### Modelo de Datos
+
+Los modelos de datos definen cómo se modela la estructura lógica de una base de datos. Son entidades fundamentales para introducir la abstracción en un SGBD. Los modelos de datos definen cómo los datos se conectan entre sí y cómo se procesan y almacenan dentro del sistema.
+
+El primer modelo de datos podría ser modelo de datos planos (archivos), donde todos los datos utilizados se mantendrían en el mismo plano. Los primeros modelos de datos no eran tan científicos, por lo tanto, eran propensos a introducir muchas anomalías de duplicación y actualización.
+
+#### Modelo de relación de entidad
+
+El modelo **entidad-relación (ER)** se basa en la noción de entidades del mundo real y las relaciones entre ellos. Al formular el escenario del mundo real en el modelo de la base de datos, el Modelo ER crea conjunto de entidades, conjunto de relaciones, atributos generales y restricciones.
+
++ Se utiliza mejor para el diseño conceptual de una base de datos.
++ Se basa en:
+    + Las entidades y sus atributos.
+    + Relaciones entre entidades.
+
+![](../images/er_model_intro.png)
 
 
-### Llaves primarias y foráneas
++ **Entidad**: Es una entidad del mundo real que tiene propiedades llamadas atributos. Cada atributo está definido por su conjunto de valores llamado dominio. Por ejemplo, en una base de datos escolar, un estudiante se considera como una entidad. El estudiante tiene varios atributos como nombre, edad, clase, etc.
+
++ **Relación**: Es la asociación lógica entre entidades. Las relaciones se mapean con entidades de varias maneras. Las cardinalidades de mapeo definen el número de asociaciones entre dos entidades.
+
++ **Asignación de cardinalidades**: 
+
+    ![](../images/onetoone.jpg)
+    ![](../images/onetomany.jpg)
+    ![](../images/manytomany.jpg)
+
+#### Modelo relacional
+
+El modelo de datos más popular en SGBD es el Modelo Relacional. Es un modelo más científico que otros. Este modelo se basa en lógica de predicados de primer orden y define una tabla como una relación n-aria.
+
+![](../images/relational_model_table.png)
+
+Los principales aspectos destacados de este modelo son:
+  + Los datos se almacenan en tablas llamadas relaciones.
+  + Las relaciones pueden ser normalizadas.
+  + En las relaciones normalizadas, los valores guardados son valores atómicos.
+  + Cada fila en una relación contiene un valor único.
+  + Cada columna en una relación contiene valores de un mismo dominio.
+  
+##### Conceptos
+
++ **Tablas:** en el modelo de datos relacionales, las relaciones se guardan en el formato de *Tablas*. Este formato almacena la relación entre entidades. Una tabla tiene filas y columnas, donde las filas representan los registros y las columnas representan los atributos.
+
++ **Tupla:** una sola fila de una tabla, que contiene un único registro para esa relación, se llama tupla.
+
++ **Instancia de relación:** un conjunto finito de tuplas en el sistema de base de datos relacional representa la instancia de relación. Las instancias de relación no tienen tuplas duplicadas.
+
++ **Esquema de relación:** un esquema de relación describe el nombre de la relación (nombre de la tabla), los atributos y sus nombres.
+
++ **Clave de relación:** cada fila tiene uno o más atributos, conocidos como clave de relación, que pueden identificar la fila en la relación (tabla) de forma única.
+
++ **Dominio de atributo:** cada atributo tiene un alcance de valor predefinido, conocido como dominio de atributo.
+
+##### Restricciones
+
+![](../images/tabla.png)
+
+Cada relación tiene algunas condiciones que deben ser válidas para que sea una relación válida. Estas condiciones se llaman Restricciones de Integridad Relacional. 
+
+Hay tres restricciones principales de integridad:
+    + Restricciones de clave
+    + Restricciones de dominio
+    + Restricciones de integridad referencial
+    
+**Restricciones de clave**
+
+Debe haber al menos un subconjunto mínimo de atributos en la relación, que puede identificar una tupla de forma única. Este subconjunto mínimo de atributos se llama clave para esa relación. Si hay más de un subconjunto mínimo de este tipo, estos se denominan claves candidatas.
+
+Las restricciones clave fuerzan que:
+
+  + en una relación con un atributo clave, no hay dos tuplas que puedan tener valores idénticos para los atributos clave.
+
+  + un atributo clave no puede tener valores NULL.
+
+Las restricciones clave también se conocen como Restricciones de entidad.
+
+**Restricciones de dominio**
+
+Los atributos tienen valores específicos en el escenario del mundo real. Por ejemplo, la edad solo puede ser un número entero positivo. Las mismas restricciones se han intentado emplear en los atributos de una relación. Cada atributo está obligado a tener un rango específico de valores. Por ejemplo, la edad no puede ser inferior a cero y los números de teléfono no pueden contener un dígito fuera de 0-9.
+
+**Restricciones de integridad referencial**
+
+Las restricciones de integridad referencial funcionan con el concepto de claves externas. Una clave foránea es un atributo clave de una relación que puede referirse en otra relación.
+
+La restricción de integridad referencial establece que si una relación se refiere a un atributo clave de una relación diferente o igual, entonces ese elemento clave debe existir.
+
+![](../images/relational_model.png)
+  
+##### Reglas de Codd 
+
+El Dr. Edgar F. Codd, después de su extensa investigación sobre el Modelo Relacional de sistemas de bases de datos, propuso doce reglas propias, que según él, una base de datos debe obedecer para ser considerada como una verdadera base de datos relacional.
+
+Estas reglas se pueden aplicar a cualquier SGBD que administre datos almacenados utilizando solo sus capacidades relacionales.
+
++ **Regla 1: Regla de información**
+Todo en una base de datos se debe almacenar en un formato de tabla.
+
++ **Regla 2: Regla de acceso garantizado**
+Se garantiza que cada elemento de datos (valor) sea accesible de forma lógica con una combinación de nombre-tabla, clave-primaria (valor de fila) y nombre-atributo (valor de columna). No se puede usar ningún otro medio, como punteros, para acceder a los datos.
+
++ **Regla 3: Tratamiento sistemático de valores NULL**
+Los valores NULL en una base de datos deben recibir un tratamiento sistemático y uniforme. Esta es una regla muy importante porque un NULL puede interpretarse como uno de los siguientes: faltan datos, no se conocen los datos o los datos no son aplicables.
+
++ **Regla 4: Catálogo en línea activo**
+La descripción de la estructura de toda la base de datos se debe almacenar en un catálogo en línea, conocido como diccionario de datos, al que pueden acceder los usuarios autorizados. Los usuarios pueden usar el mismo lenguaje de consulta para acceder al catálogo que utilizan para acceder a la base de datos.
+
++ **Regla 5: Regla de sublenguas de datos integrales**
+Solo se puede acceder a una base de datos utilizando un lenguaje que tenga sintaxis lineal que admita la definición de datos, la manipulación de datos y las operaciones de gestión de transacciones. Este lenguaje puede usarse directamente o por medio de alguna aplicación. Si la base de datos permite el acceso a los datos sin ayuda de este idioma, se considera una violación.
+
++ **Regla 6: Regla de actualización de vistas**
+Todas las vistas de una base de datos, que teóricamente pueden actualizarse, también deben ser actualizadas por el sistema.
+
++ **Regla 7: Regla de inserción de alto nivel, actualización y eliminación**
+Una base de datos debe admitir la inserción, la actualización y la eliminación de alto nivel. Esto no debe limitarse a una sola fila, es decir, también debe admitir las operaciones de unión, intersección y operaciones menores para generar conjuntos de registros de datos.
+
++ **Regla 8: Independencia de datos físicos**
+Los datos almacenados en una base de datos deben ser independientes de las aplicaciones que acceden a la base de datos. Cualquier cambio en la estructura física de una base de datos no debe tener ningún impacto sobre cómo las aplicaciones externas acceden a los datos.
+
++ **Regla 9: Independencia de datos lógicos**
+Los datos lógicos en una base de datos deben ser independientes de la vista del usuario (aplicación). Cualquier cambio en los datos lógicos no debe afectar las aplicaciones que lo usan. Por ejemplo, si dos tablas se fusionan o una se divide en dos tablas diferentes, no debe haber impacto o cambio en la aplicación del usuario. Esta es una de las reglas más difíciles de aplicar.
+
++ **Regla 10: Independencia de la integridad**
+Una base de datos debe ser independiente de la aplicación que la usa. Todas sus restricciones de integridad se pueden modificar independientemente sin necesidad de ningún cambio en la aplicación. Esta regla hace que una base de datos sea independiente de la aplicación de front-end y su interfaz.
+
++ **Regla 11: Independencia de distribución**
+El usuario final no debe poder ver que los datos se distribuyen en varias ubicaciones. Los usuarios siempre deben tener la impresión de que los datos se encuentran en un solo sitio. Esta regla se ha considerado como la base de los sistemas de bases de datos distribuidas.
+
++ **Regla 12: Regla de no subversión**
+Si un sistema tiene una interfaz que proporciona acceso a registros de bajo nivel, entonces la interfaz no debe poder subvertir el sistema y eludir las restricciones de seguridad e integridad.
 
 
-### Formas Normales
+### Normalización
 
+Si el diseño de una base de datos no es perfecto, puede contener anomalías, que son como un mal sueño para cualquier administrador de base de datos. Administrar una base de datos con anomalías es casi imposible.
 
-### SGBD
++ **Anomalías de actualización:** si los elementos de datos están dispersos y no están vinculados entre sí de manera adecuada, podría dar lugar a situaciones extrañas. Por ejemplo, cuando intentamos actualizar un elemento de datos con sus copias dispersas en varios lugares, algunas instancias se actualizan correctamente, mientras que otras se quedan con valores antiguos. Tales instancias dejan la base de datos en un estado inconsistente.
 
++ **Anomalías de eliminación:** intentamos eliminar un registro, pero partes de este no se borraron por desconocimiento, los datos también se guardan en otro lugar.
 
-## MySQL
++ **Anomalías de inserción:** intentamos insertar datos en un registro que no existe en absoluto.
 
-### Ambiente de ejecución
+La normalización es un método para eliminar todas estas anomalías y llevar la base de datos a un estado consistente.
 
+#### Primera forma normal
+
+La primera forma normal se define en la definición de relaciones (tablas). Esta regla define que todos los atributos en una relación deben tener dominios atómicos. Los valores en un dominio atómico son unidades indivisibles.
+
+![](../images/unorganized_relation.png)
+
+Reordenamos la relación (tabla) como se muestra a continuación, para convertirla en la *Primera Forma Normal*.
+
+![](../images/firstnf.png)
+
+Cada atributo debe contener solo un valor único de su dominio predefinido.
+
+#### Segunda forma normal
+
+Antes de aprender sobre la segunda forma normal, debemos entender lo siguiente:
+
++ **Atributo principal:** un atributo, que es una parte de la clave candidata, se conoce como atributo principal.
+
++ **Atributo no principal:** se dice que un atributo que no forma parte de la llave primaria es un atributo no principal.
+
+Si seguimos la segunda forma normal, entonces cada atributo que no sea principal debe ser totalmente dependiente funcionalmente del atributo clave principal. Es decir, si X → A se mantiene, entonces no debe haber ningún subconjunto propio Y de X, para lo cual Y → A también es verdadero.
+
+![](../images/not_2nf.png)
+
+Vemos aquí en la relación `Student_project` que los atributos clave principales son `Stu_ID` y `Proj_ID`. De acuerdo con la regla, los atributos no clave, es decir, `Stu_Name` y `Proj_Name` deben depender de ambos y no de ninguno de los atributos de la clave principal individualmente. Pero encontramos que `Stu_Name` puede ser identificado por `Stu_ID` y `Proj_Name` puede ser identificado por `Proj_ID` de manera independiente. Esto se llama dependencia parcial, lo cual no está permitido en la *Segunda Forma Normal*.
+
+![](../images/secondnf.png)
+
+Rompimos la relación en dos como se muestra en la imagen de arriba. Entonces no existe una dependencia parcial.
+
+#### Tercera forma normal
+
+Para que una relación esté en la *Tercera Forma Normal*, debe estar en la *Segunda Forma Normal* y lo siguiente debe satisfacer:
+
+  + Ningún atributo no principal depende transitoriamente del atributo clave principal.
+  + Para cualquier dependencia funcional no trivial, X → A, entonces - X es una superclave o A es el atributo principal.
+  
+![](../images/not_3nf.png)
+
+Encontramos que en la relación (tabla) anterior **Student_detail**, `Stu_ID` es la clave y el único atributo clave principal. Encontramos que `City` puede ser identificada por `Stu_ID` y `Zip`. Ni `Zip` es una superclave ni `City` es un atributo principal. Además, `Stu_ID` → `Zip` → `City`, por lo que existe dependencia transitiva.
+
+Para llevar esta relación a la tercera forma normal, dividimos la relación en dos relaciones de la siguiente manera:
+
+![](../images/thirdnf.png)
 
 ### SQL
 
+SQL (Structured Query Language) es un lenguaje de programación para bases de datos relacionales.
 
-### DDL y DML
+Comprende tanto la definición de datos como los lenguajes de manipulación de datos. Usando las propiedades de definición de datos de SQL, se puede diseñar y modificar el esquema de la base de datos, mientras que las propiedades de manipulación de datos permiten que SQL almacene y recupere datos de la base de datos.
+
+#### Lenguaje de definición de datos (DDL)
+
+SQL usa el siguiente conjunto de comandos para definir el esquema de la base de datos:
+
+**CREATE**
+
+Crea nuevas bases de datos, tablas y vistas.
+
+Por ejemplo:
+
+```{bash, eval=FALSE}
+Create database greenshark;
+Create table data_analyst;
+Create view for_students;
+```
+
+**DROP**
+
+Elimina comandos, vistas, tablas y bases de datos de SGBD.
+
+Por ejemplo:
+
+```{bash, eval=FALSE}
+Drop object_type object_name;
+Drop database greenshark;
+Drop table data_analyst;
+Drop view for_students;
+```
+
+**ALTER**
+
+Modifica el esquema de la base de datos.
+
+```{bash, eval=FALSE}
+Alter object_type object_name parameters;
+```
+
+Por ejemplo:
+
+```{bash, eval=FALSE}
+Alter table data_analyst add subject varchar;
+```
+
+Este comando agrega un atributo en la relación **data_analyst** con el nombre **subject** de tipo `string`.
+
+#### Lenguaje de manipulación de datos (DML)
+
+SQL está equipado con lenguaje de manipulación de datos (DML). DML modifica la instancia de la base de datos al insertar, actualizar y borrar sus datos. DML es responsable de todas las modificaciones de datos desde una base de datos. 
+
+SQL contiene el siguiente conjunto de comandos en su sección DML:
+
+  + SELECT/FROM/WHERE
+  + INSERT INTO/VALUES
+  + UPDATE/SET/WHERE
+  + DELETE FROM/WHERE
+
+Estas construcciones básicas permiten a los programadores y usuarios de bases de datos ingresar datos e información en la base de datos y recuperarlos de manera eficiente usando una cantidad de opciones de filtro.
+
+**SELECT/FROM/WHERE**
+
+  + **SELECT:** Este es uno de los comandos de consulta fundamentales de SQL. Selecciona los atributos según la condición descrita por la cláusula WHERE.
+
+  + **FROM:** Esta cláusula toma el nombre de una relación como un argumento a partir del cual se deben seleccionar / proyectar los atributos. En caso de que se de más de una relación, esta cláusula corresponde al producto cartesiano.
+
+  + **WHERE:** Esta cláusula define el predicado o las condiciones, que deben coincidir para calificar los atributos que se proyectarán.
+
+Por ejemplo:
+
+```{bash, eval=FALSE}
+Select author_name
+From book_author
+Where age > 50;
+```
+
+Este comando arrojará los nombres de los autores de la relación libro_autor cuya edad sea mayor que 50.
+
+**INSERT INTO/VALUES**
+
+Este comando se usa para insertar valores en las filas de una tabla (relación).
+
+**Sintaxis**
+
+```{bash, eval=FALSE}
+INSERT INTO table (column1 [, column2, column3 ... ]) VALUES (value1 [, value2, value3 ... ])
+```
+
+o
+
+```{bash, eval=FALSE}
+INSERT INTO table VALUES (value1, [value2, ... ])
+```
+
+Por ejemplo:
+
+```{bash, eval=FALSE}
+INSERT INTO tutorialspoint (Author, Subject) VALUES ("anonymous", "computers");
+```
 
 
-## API REST
+**UPDATE/SET/WHERE**
 
-### Protocolo HTTP
+Este comando se usa para actualizar o modificar los valores de las columnas en una tabla (relación).
+
+**Sintaxis**
+
+```{bash, eval=FALSE}
+UPDATE table_name SET column_name = value [, column_name = value ...] [WHERE condition]
+```
+
+Por ejemplo:
+
+```{bash, eval=FALSE}
+UPDATE greenshark SET Author="webmaster" WHERE Author="anonymous";
+```
+
+**DELETE/FROM/WHERE**
+
+Este comando se usa para eliminar una o más filas de una tabla (relación).
+
+**Sintaxis**
+
+```{bash, eval=FALSE}
+DELETE FROM table_name [WHERE condition];
+```
+
+Por ejemplo:
+
+```{bash, eval=FALSE}
+DELETE FROM greenshark
+   WHERE Author="unknown";
+``` 
+
+<!-- ### MySQL -->
+
+<!-- #### Ambiente de ejecución -->
 
 
-### JSON
+<!-- ## API REST -->
+
+<!-- ### Protocolo HTTP -->
 
 
-### Endpoints y recuperación de información
+<!-- ### JSON -->
 
 
-### Parsing de información
+<!-- ### Endpoints y recuperación de información -->
 
 
-### Conexión y sesiones
+<!-- ### Parsing de información -->
 
 
-### Tipos de API REST
+<!-- ### Conexión y sesiones -->
 
 
-### INEGI
+<!-- ### Tipos de API REST -->
 
 
-### Twitter
+<!-- ### INEGI -->
+
+
+<!-- ### Twitter -->
 
