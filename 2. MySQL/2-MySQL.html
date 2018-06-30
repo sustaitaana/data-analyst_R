@@ -395,7 +395,7 @@ mpgs &lt;-<span class="st"> </span>mtc %&gt;%<span class="st"> </span><span clas
 <span class="kw">inner_join</span>(mpgs, cyls) %&gt;%<span class="st"> </span><span class="kw">head</span>()</code></pre></div>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
-{"columns":[{"label":["car"],"name":[1],"type":["chr"],"align":["left"]},{"label":["mpg"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["cyl"],"name":[3],"type":["dbl"],"align":["right"]}],"data":[{"1":"Cadillac Fleetwood","2":"10.4","3":"8"},{"1":"Ferrari Dino","2":"19.7","3":"6"},{"1":"Porsche 914-2","2":"26.0","3":"4"},{"1":"Merc 450SE","2":"16.4","3":"8"},{"1":"Chrysler Imperial","2":"14.7","3":"8"},{"1":"Volvo 142E","2":"21.4","3":"4"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+{"columns":[{"label":["car"],"name":[1],"type":["chr"],"align":["left"]},{"label":["mpg"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["cyl"],"name":[3],"type":["dbl"],"align":["right"]}],"data":[{"1":"Ford Pantera L","2":"15.8","3":"8"},{"1":"AMC Javelin","2":"15.2","3":"8"},{"1":"Hornet 4 Drive","2":"21.4","3":"6"},{"1":"Pontiac Firebird","2":"19.2","3":"8"},{"1":"Merc 230","2":"22.8","3":"4"},{"1":"Porsche 914-2","2":"26.0","3":"4"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
 <p>Hay varias maneras de unir dos bases de datos y debemos pensar en el objetivo:</p>
@@ -472,7 +472,8 @@ x</code></pre></div>
 <ol style="list-style-type: decimal">
 <li><p>¿Qué personajes son droides?</p></li>
 <li><p>Muestra el color de cabello, piel y ojos de los personajes femeninos</p></li>
-<li><p>Calcula el índice de masa corporal <span class="math inline">\(bmi=\frac{mass(kg)}{height^{2}(m)}\)</span></p></li>
+<li><p>Calcula el índice de masa corporal de cada personaje</p>
+<p><img src="data:image/png;base64,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" /> <span class="math inline">\(bmi=\frac{mass(kg)}{height^{2}(m)}\)</span></p></li>
 <li><p>¿Cuáles son los 5 personajes más pesados?</p></li>
 <li><p>¿Cuántos personajes de cada especie hay? ¿Cuál es el promedio de peso de cada especie? Muestra esta información de aquellas especies que tengan más de 1 personaje.</p></li>
 </ol>
@@ -482,6 +483,8 @@ x</code></pre></div>
 </div>
 <div id="r-db-dplyr" class="section level2">
 <h2>R db + dplyr</h2>
+<div id="datos-relacionales" class="section level3">
+<h3>Datos Relacionales</h3>
 <p>Trabajaremos con la base de datos <code>nycflights13</code> para ejemplificar mejor las funciones de divide-aplica-combina de <code>dplyr</code>:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(nycflights13)
 
@@ -537,6 +540,7 @@ nycflights13::flights %&gt;%<span class="st"> </span><span class="kw">head</span
 <li><p>Explora si los aviones más viejos están asociados a mayores retrasos, responde con una gráfica.</p></li>
 </ol>
 <!-- #### Respuestas -->
+</div>
 </div>
 </div>
 <div id="mysql-db-dplyr" class="section level2">

@@ -177,9 +177,11 @@ dplyr::summarise(by_genero, promedio = mean(estatura))
 
 Algunas funciones útiles con _summarise_ son `min(x)`, `median(x)`, `max(x)`, `quantile(x, p)`, `n()`, `sum(x)`, `sum(x > 1)`, `mean(x > 1)`, `sd(x)`.
 
+
 <div style="background-color:#ffcf40">
 **Nota importante: existen conflictos con la función summarise. Por lo tanto, puede ser necesario indicar que se debe utilizar la función summarise del paquete dplyr. Esto se hace anteponiendo a la llamada de la función dos símbolos de 'dos puntos' :: y antecediendo el nombre del paquete que se desea utilizar, en este caso, dplyr. A veces se necesita hacer lo mismo con la función mutate. La razón de esto es que hay un conflicto entre los paquetes plyr y dplyr. En principio, plyr ya no se usa porque dplyr es la versión nueva (y mejor) de plyr. Pero aquí usamos este paquete para hacer uso de las funciones laply, dlply, y ldply. **
 </div>
+
 
 #### Variables por grupo
 
@@ -240,7 +242,9 @@ anti |Incluye las filas de x que no coinciden con y
 
 2. Muestra el color de cabello, piel y ojos de los personajes femeninos
 
-3. Calcula el índice de masa corporal $bmi=\frac{mass(kg)}{height^{2}(m)}$
+3. Calcula el índice de masa corporal de cada personaje 
+
+    ![](../images/pointer.png) $bmi=\frac{mass(kg)}{height^{2}(m)}$
 
 4. ¿Cuáles son los 5 personajes más pesados?
 
@@ -254,6 +258,8 @@ anti |Incluye las filas de x que no coinciden con y
 
 
 ## R db + dplyr
+
+### Datos Relacionales
 
 
 
