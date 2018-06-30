@@ -1,0 +1,352 @@
+---
+title: "Ciencia de Datos con R"
+subtitle: "2. dplyr + database (db)"
+author: "Ana Sustaita, sustaitaana@gmail.com"
+output:
+  html_document:
+    df_print: paged
+    highlight: tango
+    theme: flatly
+  pdf_document: default
+  word_document: default
+---
+
+![](../images/greenshark.png)
+
+# {.tabset .tabset-fade .tabset-pills}
+
+## dplyr
+
+ ![](../images/divide-aplica-combina.png)
+
+`dplyr` añade muchas funciones para manipulación de datos a través de data frames, con un gran performance y backends para varias bases de datos. Nos permite manipular directamente tablas de una BD, sin escribir SQL, toda la evaluación es lazy y, de ser posible, se realiza directamente en la BD.
+
+Para estos ejemplos utilizaremos un data frame local (la tabla `mtcars` del paquete `dplyr`). Más adelante veremos cómo usar `dplyr` con bases de datos.
+
+```{r, message=FALSE, warning=FALSE}
+library(dplyr)
+mtc <- tbl_df(mtcars)
+mtc$car <- row.names(mtcars)
+head(mtc)
+```
+
+También usaremos el siguiente data frame de "juguete" para tener más ejemplos:
+
+```{r, message=FALSE, warning=FALSE}
+df_ej <- data.frame(genero = c("mujer", "hombre", "mujer", "mujer", "hombre"), 
+                    estatura = c(1.65, 1.80, 1.70, 1.60, 1.67))
+df_ej
+```
+
+### dplyr | select
+
+En `dplyr` *select* se ocupa para seleccionar las columnas que queremos que formen parte de la respuesta.
+
+![](../images/select_data.png)
+
+```{r, message=FALSE, warning=FALSE}
+mtc %>% select(car, cyl, mpg) %>%
+  head()
+```
+
+```{r, message=FALSE, warning=FALSE}
+df_ej
+select(df_ej, genero)
+select(df_ej, -genero)
+```
+
+```{r, eval = FALSE, message=FALSE, warning=FALSE}
+select(df_ej, starts_with("g"))
+select(df_ej, contains("g"))
+```
+
+### dplyr | filter
+
+La función *filter* permite filtrar un data frame por alguna condición que los renglones deban cumplir.
+
+![](../images/filter_data.png)
+
+```{r, message=FALSE, warning=FALSE}
+mtc %>% select(car, cyl, mpg) %>%
+  filter(cyl >= 6) %>%
+  head()
+```
+
+Se puede hacer *filter* por más de una condición a la vez.
+
+Aprovechemos para ver `%in%`
+
+```{r, message=FALSE, warning=FALSE}
+mtc %>% select(car, cyl, mpg) %>%
+  filter(cyl %in% c(4,6)) %>%
+  head()
+```
+
+```{r, message=FALSE, warning=FALSE}
+filter(df_ej, genero == "mujer")
+filter(df_ej, estatura > 1.65 & estatura < 1.75)
+```
+
+Algunos operadores importantes para filtrar son:
+
+```{r, eval = FALSE, message=FALSE, warning=FALSE}
+x > 1
+x >= 1
+x < 1
+x <= 1
+x != 1
+x == 1
+x %in% ("a", "b")
+
+# Conjuntos
+a | b
+a & b
+a & !b
+xor(a, b)
+```
+
+### dplyr | arrange
+
+Ocupamos *arrange* para ordenar los datos de acuerdo a alguna(s) columna(s), por default se ordenan de manera ascendente por lo que debemos indicar que lo queremos de manera descendente cuando así lo querramos y por cuál columna vamos a ordenar.
+
+```{r, message=FALSE, warning=FALSE}
+mtc %>% select(car, cyl, mpg) %>%
+  filter(cyl >= 6) %>%
+  arrange(desc(mpg)) %>%
+  head()
+```
+
+```{r, message=FALSE, warning=FALSE}
+arrange(df_ej, genero)
+arrange(df_ej, desc(estatura))
+```
+
+### dplyr | mutate
+
+La función *mutate* permite agregar una columna que no existía en el data frame original a partir de columnas que sí pertenecen al data frame original.
+
+```{r, message=FALSE, warning=FALSE}
+mtc %>% select(car, cyl, mpg) %>%
+  filter(cyl >= 6) %>%
+  arrange(desc(mpg)) %>%
+  mutate(kpl = 1.6/3.78*mpg) %>%
+  head()
+```
+
+```{r, message=FALSE, warning=FALSE}
+mutate(df_ej, estatura_cm = estatura * 100) 
+mutate(df_ej, estatura_cm = estatura * 100, estatura_in = estatura_cm * 0.3937) 
+```
+
+### dplyr | group by + summarise
+
+*group_by* agrupa un set de datos por alguna(s) columna(s), ocupamos *summarise* para aplicar alguna función a cada grupo de datos, count(\*) es un `n()` en dplyr, también se puede sacar `mean()`, `sd()`, `median()`, una función definida por nosotros, etc. Para unir todas las funciones ocupamos *magrittr* `%>%`.
+
+```{r, message=FALSE, warning=FALSE}
+mtc %>% 
+  select(car, cyl, mpg) %>%
+  filter(cyl >= 6) %>%
+  arrange(desc(mpg)) %>%
+  mutate(kpl = 1.6/3.78*mpg) %>%
+  group_by(cyl) %>%
+  dplyr::summarise(mean.kpl = mean(kpl), n = n())
+```
+
+La salida de `group by` regresa las cosas ordenadas alfabéticamente -por la columna con la que hizo agrupación-.
+
+Las operaciones que se realizan después de `group_by` se aplican a cada grupo por separado. e.g. `arrange` organiza las filas dentro de cada grupo por las columnas indicadas.
+
+Summarise solo sirve para crear nuevas bases de datos con resúmenes o agregaciones de los datos originales.
+
+```{r, message=FALSE, warning=FALSE}
+dplyr::summarise(df_ej, promedio = mean(estatura))
+```
+
+Podemos crear solamente una base de datos agrupada:
+  
+```{r}
+by_genero <- group_by(df_ej, genero)
+by_genero
+```
+
+y después operar sobre cada grupo, creando un resumen a nivel grupo y uniendo los subconjuntos en una base nueva:
+  
+```{r, message=FALSE, warning=FALSE}
+dplyr::summarise(by_genero, promedio = mean(estatura))
+```
+
+Algunas funciones útiles con _summarise_ son `min(x)`, `median(x)`, `max(x)`, `quantile(x, p)`, `n()`, `sum(x)`, `sum(x > 1)`, `mean(x > 1)`, `sd(x)`.
+
+<div style="background-color:#ffcf40">
+**Nota importante: existen conflictos con la función summarise. Por lo tanto, puede ser necesario indicar que se debe utilizar la función summarise del paquete dplyr. Esto se hace anteponiendo a la llamada de la función dos símbolos de 'dos puntos' :: y antecediendo el nombre del paquete que se desea utilizar, en este caso, dplyr. A veces se necesita hacer lo mismo con la función mutate. La razón de esto es que hay un conflicto entre los paquetes plyr y dplyr. En principio, plyr ya no se usa porque dplyr es la versión nueva (y mejor) de plyr. Pero aquí usamos este paquete para hacer uso de las funciones laply, dlply, y ldply. **
+</div>
+
+#### Variables por grupo
+
+En ocasiones es conveniente crear variables por grupo, por ejemplo estandarizar dentro de cada grupo z = (x - mean(x)) / sd(x).
+
+Veamos un ejemplo:
+
+```{r, message=FALSE, warning=FALSE}
+mtcars_tmp <- mtcars %>%
+  group_by(cyl) %>%
+  filter(n() > 10)
+
+mtcars_2 <- mtcars_tmp %>%
+  mutate(z_mpg = (mpg - mean(mpg)) / sd(mpg)) %>%
+  filter(z_mpg > 0.5)
+
+mtcars_2
+```
+
+### dplyr | join
+
+```{r, message=FALSE, warning=FALSE} 
+cyls <- mtc %>% select(car, cyl) %>% sample_n(20)
+mpgs <- mtc %>% select(car, mpg) %>% sample_n(20)
+inner_join(mpgs, cyls) %>% head()
+```
+
+Hay varias maneras de unir dos bases de datos y debemos pensar en el objetivo:
+
+```{r, message=FALSE, warning=FALSE}
+x <- data.frame(name = c("John", "Paul", "George", "Ringo", "Stuart", "Pete"),
+                instrument =c("guitar", "bass", "guitar", "drums", "bass", "drums"))
+
+y <- data.frame(name = c("John", "Paul", "George", "Ringo", "Brian"),
+                band = c("TRUE", "TRUE", "TRUE",  "TRUE", "FALSE"))
+x
+y
+
+inner_join(x, y, by = 'name')
+left_join(x, y)
+semi_join(x, y)
+anti_join(x, y)
+```
+
+Resumamos lo que observamos arriba:
+
+Tipo | Acción
+-----|-------
+inner|Incluye únicamente las filas que aparecen tanto en x como en y
+left |Incluye todas las filas en x y las filas de y que coincidan
+semi |Incluye las filas de x que coincidan con y
+anti |Incluye las filas de x que no coinciden con y
+
+
+##### Ejercicios
+
+1. ¿Qué personajes son droides?
+
+2. Muestra el color de cabello, piel y ojos de los personajes femeninos
+
+3. Calcula el índice de masa corporal $bmi=\frac{mass(kg)}{height^{2}(m)}$
+
+4. ¿Cuáles son los 5 personajes más pesados?
+
+5. ¿Cuántos personajes de cada especie hay? ¿Cuál es el promedio de peso de cada especie? Muestra esta información de aquellas especies que tengan más de 1 personaje.
+
+<!-- ##### Respuestas -->
+
+```{r, message=FALSE, warning=FALSE}
+
+```
+
+
+## R db + dplyr
+
+
+
+Trabajaremos con la base de datos `nycflights13` para ejemplificar mejor
+las funciones de divide-aplica-combina de `dplyr`:
+  
+```{r, message=FALSE, warning=FALSE}
+library(nycflights13)
+
+nycflights13::flights %>% head()
+
+nycflights13::airlines %>% head()
+
+nycflights13::airports %>% head()
+
+nycflights13::planes %>% head()
+
+nycflights13::weather %>% head()
+```
+
+#### Ejercicios
+
+1. Encuentra todos los vuelos hacia SFO ó OAK.
+
+2. Los vuelos con un retraso mayor a una hora.
+
+3. En los que el retraso de llegada es más del doble que el retraso de salida.
+
+4. Ve la ayuda de select (`?select`) y escribe tres
+maneras de seleccionar las variables de retraso (delay).
+
+5. Ordena los vuelos por fecha de salida y hora.
+
+6. ¿Cuáles son los diez vuelos con mayor retraso?
+
+7. ¿Qué vuelos _ganaron_ más tiempo en el aire?
+
+8. Calcula la velocidad en millas por hora a partir de
+la variable tiempo y la distancia (en millas). ¿Qué vuelo fue el más rápido?
+
+9. Crea una nueva variable que muestre cuánto tiempo se ganó o perdió durante el vuelo.
+
+10. Calcula el retraso de llegada promedio por fecha.
+
+11. ¿Qué otros resúmenes puedes hacer para explorar el retraso por fecha?
+
+12. ¿Qué destinos tienen el promedio de retrasos más alto?
+
+13. ¿Qué vuelos (compañía + vuelo) ocurren diario?
+
+14. En promedio, ¿cómo varían a lo largo del día los retrasos de vuelos no cancelados? (pista: hour + minute / 60)
+
+15. Ahora combinamos datos a nivel hora con condiciones climáticas, ¿cuál es el tipo de unión adecuado?
+
+16. ¿Qué condiciones climáticas están asociadad con retrasos en las salidas de Houston?
+
+17. Explora si los aviones más viejos están asociados a mayores retrasos, responde con una gráfica.
+
+<!-- #### Respuestas -->
+
+```{r, message=FALSE, warning=FALSE}
+
+```
+
+## MySQL db + dplyr
+
+```{r}
+library(pool)
+library(RMySQL)
+
+db.host <- '127.0.0.1'
+db.user <- 'root'
+db.port <- 3306
+
+## DB Connection
+db_connect <- function(db.name) {
+  db <- dbPool(
+    drv = RMySQL::MySQL(),
+    dbname = db.name,
+    host = db.host,
+    user = db.user,
+    #password = db.password,
+    port = as.numeric(db.port)
+  )
+  
+  return(db)
+}
+```
+
+```{r}
+northwind <- db_connect('northwind')
+employees <- tbl(northwind, 'Employees') %>% 
+  select(-Photo)
+```
+
+
