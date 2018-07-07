@@ -789,7 +789,7 @@ db_connect <- function(db.name) {
 
 Podemos agregar una tabla (o varias) a la base de datos usando las mismas credenciales con las que nos conectamos a ella con la función `copy_to()`:
 
-```{r, message=FALSE, warning=FALSE, eval=FALSE, include=TRUE}
+```{r, eval=FALSE, message=FALSE, warning=FALSE, include=TRUE}
 copy_to(
   db_connect('nycflights'), 
   nycflights13::flights, 
@@ -904,8 +904,17 @@ tailnum_delay_db
 
 Detrás de escena, `dplyr` está traduciendo nuestro código R en SQL. Podemos ver la consulta SQL que está generando con `show_query()`:
 
-```{r, message=FALSE, warning=FALSE}
+```{r, eval=FALSE, message=FALSE, warning=FALSE, include=TRUE}
 tailnum_delay_db %>% show_query()
+
+<SQL>
+SELECT *
+FROM (SELECT *
+FROM (SELECT `tailnum`, AVG(`arr_delay`) AS `delay`, count(*) AS `n`
+FROM `flights`
+GROUP BY `tailnum`) `ibfilopqjv`
+ORDER BY `delay` DESC) `pjjxdobtkv`
+WHERE (`n` > 100.0)
 ```
 
 Probablemente no es exactamente lo que escribiríamos a mano si hiciéramos la consulta directo en SQL, pero cumple su función. Podemos obtener más información sobre la traducción a SQL en `vignette("sql-translation")`.
@@ -938,10 +947,12 @@ tailnum_delay
 
 + Como no puede encontrar las últimas filas sin ejecutar toda la consulta, no podemos usar `tail()`.
 
-```{r, message=FALSE, warning=FALSE}
+```{r, eval=FALSE, message=FALSE, warning=FALSE, include=TRUE}
 nrow(tailnum_delay_db)
+# [1] NA
 
 tail(tailnum_delay_db)
+# Error: tail() is not supported by sql sources
 ```
 
 
