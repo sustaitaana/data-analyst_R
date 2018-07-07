@@ -250,7 +250,7 @@ anti |Incluye las filas de x que no coinciden con y
 
 5. ¿Cuántos personajes de cada especie hay? ¿Cuál es el promedio de peso de cada especie? Muestra esta información de aquellas especies que tengan más de 1 personaje.
 
-<!-- ##### Respuestas -->
+##### <-- Respuestas -->
 
 ```{r, message=FALSE, warning=FALSE}
 
@@ -261,23 +261,470 @@ anti |Incluye las filas de x que no coinciden con y
 
 ### Datos Relacionales
 
+Es raro que un análisis de datos involucre solo una tabla de datos. Normalmente tiene muchas y debemos combinarlas para responder a las preguntas que nos interesan. En conjunto, las tablas múltiples de datos se denominan datos relacionales porque son las relaciones, no solo los conjuntos de datos individuales, las que son importantes.
 
+Las relaciones siempre se definen entre un par de tablas. Todas las demás relaciones se construyen a partir de esta idea simple: las relaciones de tres o más tablas son siempre una propiedad de las relaciones entre cada par. ¡A veces ambos elementos de un par pueden ser la misma tabla! Esto es necesario si, por ejemplo, tenemos una tabla de personas, y cada persona tiene una referencia a sus padres.
 
-Trabajaremos con la base de datos `nycflights13` para ejemplificar mejor
-las funciones de divide-aplica-combina de `dplyr`:
-  
+Para trabajar con datos relacionales necesitas verbos que funcionen con pares de tablas. Hay tres familias de verbos diseñados para trabajar con datos relacionales:
+
++ **Mutating joins** que agrega nuevas variables a un marco de datos de observaciones coincidentes en otro.
+
++ **Filtering joins** que filtran las observaciones de un marco de datos según si coinciden o no con una observación en la otra tabla.
+
++ **Set operations** que tratan las observaciones como si fueran elementos establecidos.
+
+Exploraremos los datos relacionales de la base de datos `nycflights13` haciendo uso de los verbos de dos tablas de `dplyr`.
+
 ```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
 library(nycflights13)
+```
 
-nycflights13::flights %>% head()
+Usaremos el paquete `nycflights13` para aprender sobre datos relacionales. Contiene cuatro tibbles que están relacionados con la `flights`.
 
-nycflights13::airlines %>% head()
+`airlines` nos permite buscar el nombre completo de la empresa a partir de su código abreviado:
 
-nycflights13::airports %>% head()
+```{r, message=FALSE, warning=FALSE}
+airlines
+```
 
-nycflights13::planes %>% head()
 
-nycflights13::weather %>% head()
+`airports` brinda información sobre cada aeropuerto, identificado por el código `faa` del aeropuerto:
+
+```{r, message=FALSE, warning=FALSE}
+airports
+```
+
+`planes` brinda información sobre cada avión, identificado por su `tailnum`:
+
+```{r, message=FALSE, warning=FALSE}
+planes
+```
+
+`weather` da el clima en cada aeropuerto de Nueva York por cada hora:
+
+```{r, message=FALSE, warning=FALSE}
+weather
+```
+
+Una forma de mostrar las relaciones entre las diferentes tablas es con un diagrama:
+
+![](../images/relational-nycflights.png)
+
+Este diagrama es un poco abrumador, ¡pero es simple comparado con algunos que verás en la vida real! La clave para entender diagramas como este es recordar que cada relación siempre se encuentra entre un par de tablas. Sólo necesitamos comprender la cadena de relaciones entre las tablas que nos interesan.
+
+Para `nycflights13`:
+
++ `flights` se conecta a `planes` a través de una única variable, `tailnum`.
+
++ `flights` se conecta a `airlines` a través de la variable `carrier`.
+
++ `flights` se conecta a `airports` de dos maneras: a través de las variables `origin` y `dest`.
+
++ `flights` se conecta a `weather` a través de `origin` (la ubicación), y `year`, `month`, `day` y `hour` (el tiempo).
+
+#### Ejercicios
+
+1. Imagina que deseas dibujar (aproximadamente) la ruta que cada avión vuela desde su origen hasta su destino. ¿Qué variables necesitarías? ¿Qué tablas necesitarías combinar?
+
+2. Olvidé dibujar la relación entre `weather` y `airports`. ¿Cuál es la relación y cómo debería aparecer en el diagrama?
+
+3. `weather` sólo contiene información para los aeropuertos de origen (NYC). Si contuviera registros del clima para todos los aeropuertos de EUA, ¿Con qué relación adicional definirías `flights`?
+
+4. Sabemos que algunos días del año son "especiales", y menos personas de lo habitual vuelan en estos. ¿Cómo podría representar esos datos como un marco de datos? ¿Cuáles serían las llaves principales en esa tabla? ¿Cómo se conectaría con las tablas existentes?
+
+### Llaves
+Las variables utilizadas para conectar cada par de tablas se llaman llaves. Una llave es una variable (o conjunto de variables) que identifica de manera única una observación. En casos simples, una sola variable es suficiente para identificar una observación. Por ejemplo, cada avión está identificado de manera única por su `tailnum`. En otros casos, pueden ser necesarias múltiples variables. Por ejemplo, para identificar una observación en `weather` necesitamos cinco variables: `year`, `month`, `day`, `hour`, y `origin`.
+
+Hay dos tipos de llaves:
+
++ Una **llave primaria** identifica de manera única una observación en su propia tabla. Por ejemplo, `planes$tailnum` es una llave primaria porque identifica de forma única cada avión en la tabla `planes`.
+
++ Una **llave foránea** identifica de forma única una observación en otra tabla. Por ejemplo, el `flights$tailnum` es una llave foránea porque aparece en la tabla `flights` donde coincide cada vuelo con un avión único.
+
+Una variable puede ser tanto una llave primaria como una llave foránea. Por ejemplo, `origin` es parte de la llave primaria de `weather` y también es una llave foránea para la tabla `airports`.
+
+Una vez que hayamos identificado las llaves primarias en las tablas, es una buena práctica verificar que sí identifiquen de manera única cada observación. Una forma de hacerlo es contando las llaves primarias con `count()` y buscar las entradas donde `n` es mayor que uno:
+
+```{r, message=FALSE, warning=FALSE}
+planes %>% 
+  count(tailnum) %>% 
+  filter(n > 1)
+
+weather %>% 
+  count(year, month, day, hour, origin) %>% 
+  filter(n > 1)
+```
+
+Algunas veces, una tabla no tiene una llave primaria explícita: cada fila es una observación, pero ninguna combinación de variables la identifica de manera confiable. Por ejemplo, ¿cuál es la llave primaria en la tabla `flights`? Podemos pensar que sería la fecha más el número de vuelo o cola, pero ninguno de los dos es único:
+
+```{r, message=FALSE, warning=FALSE}
+flights %>% 
+  count(year, month, day, flight) %>% 
+  filter(n > 1)
+
+flights %>% 
+  count(year, month, day, tailnum) %>% 
+  filter(n > 1)
+```
+
+A primera vista, con estos datos, ingenuamente asumiríamos que cada número de vuelo solo se usaría una vez al día: eso haría mucho más fácil comunicar problemas con un vuelo específico. ¡Desafortunadamente, ese no es el caso! 
+
+Si una tabla carece de una llave primaria, puede ser útil agregar una usando las funciones `mutate()` y `row_number()`. Eso vuelve más fácil hacer coincidir las observaciones si hemos realizado algún tipo de filtrado y deseamos volver a verificar con los datos originales. Esto se llama una **llave sustituta**.
+
+Una llave primaria y la llave foránea correspondiente en otra tabla forman una relación. Las relaciones son típicamente de uno a muchos. Por ejemplo, cada vuelo tiene un avión, pero cada avión tiene muchos vuelos. En otros datos, ocasionalmente veremos una relación de 1 a 1. Puedes pensar en esto como un caso especial de 1 a muchos. Podemos modelar relaciones de muchos a muchos con una relación de varios a uno más una relación de uno a varios. Por ejemplo, en esta información existe una relación de muchos a muchos entre aerolíneas y aeropuertos: cada línea aérea vuela a muchos aeropuertos, cada aeropuerto alberga muchas líneas aéreas.
+
+#### Ejercicios
+
+1. Agrega una llave sustituta a `flights`.
+
+2. Identifica las llaves en los siguientes conjuntos de datos (es posible que necesites instalar algunos paquetes y leer cierta documentación).
+
+```{r, message=FALSE, warning=FALSE, eval=FALSE, echo=TRUE}
+Lahman::Batting,
+babynames::babynames
+nasaweather::atmos
+fueleconomy::vehicles
+ggplot2::diamonds
+```
+
+3. Dibuja un diagrama que ilustre las conexiones entre las tablas `Batting`, `Mastery Salaries` en el paquete `Lahman`. Dibuja otro diagrama que muestre la relación entre `Master`, `Managers`, `AwardsManagers`.
+
+4. ¿Cómo caracterizarías la relación entre las tablas `Batting`, `Pitching` y `Fielding`?
+
+### Mutating Joins
+
+La primera herramienta que veremos para combinar un par de tablas es la **unión mutante**. Esto permite combinar variables de dos tablas. En primer lugar, hace coincidir las observaciones con sus llaves, luego copia las variables de una tabla a la otra.
+
+Por ejemplo `mutate()`, las funciones de unión agregan variables a la derecha, por lo que si ya tiene muchas variables, las nuevas variables no se imprimirán. Para estos ejemplos, haremos que sea más fácil ver lo que está sucediendo en los ejemplos mediante la creación de un conjunto de datos más estrecho:
+
+```{r, message=FALSE, warning=FALSE}
+flights2 <- flights %>% 
+  select(year:day, hour, origin, dest, tailnum, carrier)
+flights2
+```
+
+Imaginemos que deseamos agregar el nombre completo de la línea aérea a los datos `flights2`. Podemos combinar las tablas `airlines` y `flights2` `left_join()`:
+
+```{r}
+flights2 %>%
+  select(-origin, -dest) %>% 
+  left_join(airlines, by = "carrier")
+```
+
+El resultado de la unión de las compañías aéreas `flights2` es una variable adicional: `name`. Es por eso que llamamos a este tipo de unión como unión mutante. En este caso, podríamos haber llegado al mismo lugar usando `mutate()`:
+
+```{r}
+flights2 %>%
+  select(-origin, -dest) %>% 
+  mutate(name = airlines$name[match(carrier, airlines$carrier)])
+```
+
+Pero esto es difícil de generalizar cuando necesitamos hacer coincidir múltiples variables.
+
+#### Uniones
+
+Para ayudarnos a aprender cómo funcionan las uniones, usaremos una representación visual:
+
+![](../images/join-setup.png)
+
+
+```{r}
+x <- tribble(
+  ~key, ~val_x,
+     1, "x1",
+     2, "x2",
+     3, "x3"
+)
+y <- tribble(
+  ~key, ~val_y,
+     1, "y1",
+     2, "y2",
+     4, "y3"
+)
+```
+
+La columna de color representa la variable "llave": se utilizan para hacer coincidir las filas entre las tablas. La columna gris representa la columna de "valor" que se va arrastrando a través de las uniones. En estos ejemplos, mostrarmos una sola variable llave, pero la idea se generaliza de forma directa a varias llaves y valores múltiples.
+
+Una unión es una forma de conectar cada fila en `x` a cero, una o más filas en `y`. El siguiente diagrama muestra cada coincidencia potencial como una intersección de un par de líneas.
+
+![](../images/join-setup2.png)
+
+(Si observamos detenidamente, podemos ver que hemos cambiado el orden de las columnas de llave y valor en `x`. Esto es para enfatizar que las uniones coinciden en función de la llave, el valor sólo se arrastra en el camino).
+
+En una unión real, las coincidencias se indicarán con puntos. El número de puntos es igual al número de coincidencias que es igual al número de filas en la salida.
+
+![](../images/join-inner.png)
+
+##### Inner Join
+
+El tipo más simple de unión es la unión interna. Una unión interna une pares de observaciones cuando sus llaves son iguales:
+
+![](../images/join-inner.png)
+
+(Para ser precisos, se trata de una equiunidad interna porque las llaves se combinan utilizando el operador de igualdad. Como la mayoría de las combinaciones son equivalentes, por lo general descartamos esa especificación).
+
+El resultado de una unión interna es un nuevo marco de datos que contiene la llave, los valores de `x` y los valores de `y`. Usamos `by` para decirle a `dplyr` qué variable es la llave:
+
+```{r, message=FALSE, warning=FALSE}
+x %>% 
+  inner_join(y, by = "key")
+```
+
+La propiedad más importante de una unión interna es que las filas no coincidentes no se incluyen en el resultado. Esto significa que generalmente las combinaciones internas no son apropiadas para usar en el análisis porque es muy fácil perder las observaciones.
+
+##### Outer Join
+
+Una unión interna mantiene las observaciones que aparecen en ambas tablas. Una unión externa mantiene observaciones que aparecen en al menos una de las tablas. Hay tres tipos de uniones externas:
+
+
++ **left_join** mantiene todas las observaciones de `x`.
++ **right_join** mantiene todas las observaciones de `y`.
++ **full_join** mantiene todas las observaciones de `x` y `y`.
+
+
+Estas uniones funcionan agregando una observación "virtual" adicional a cada tabla. Esta observación tiene una llave que siempre coincide (si no hay otra llave que coincida) y un valor lleno con `NA`.
+
+Gráficamente, eso se ve así:
+
+![](../images/join-outer.png)
+
+La unión más comúnmente utilizada es left_join: la usamos cada vez que buscamos datos adicionales de otra tabla, ya que conserva las observaciones originales incluso cuando no coinciden. La unión izquierda debe ser tu unión predeterminada: úsenla a menos que tengan una buena razón para preferir una de las otras.
+
+Otra forma de representar los diferentes tipos de uniones es con un diagrama de Venn:
+
+
+![](../images/join-venn.png)
+
+Sin embargo, esta no es una gran representación. Puede ayudar a nuestra memoria sobre qué unión conserva las observaciones en qué tabla, pero adolece de una limitación importante: un diagrama de Venn no puede mostrar lo que sucede cuando las llaves no identifican de manera única una observación.
+
+##### LLaves Duplicadas
+
+Hasta ahora, todos los diagramas han supuesto que las llaves son únicas. Pero ese no es siempre el caso. A continuación veremos qué sucede cuando las llaves no son únicas. Hay dos posibilidades:
+
+1. Una tabla tiene llaves duplicadas. Esto es útil cuando se desea agregar información adicional, ya que normalmente hay una relación de uno a varios.
+
+![](../images/join-one-to-many.png)
+
+
+Notemos que la columna llave está en una posición ligeramente diferente en la salida. Esto refleja que la llave es una llave primaria en `y` y una llave foránea en `x`.
+
+
+```{r, message=FALSE, warning=FALSE}
+x <- tribble(
+  ~key, ~val_x,
+     1, "x1",
+     2, "x2",
+     2, "x3",
+     1, "x4"
+)
+y <- tribble(
+  ~key, ~val_y,
+     1, "y1",
+     2, "y2"
+)
+left_join(x, y, by = "key")
+```
+
+2. Ambas tablas tienen llaves duplicadas. Esto suele ser un error porque en ninguna de las tablas las llaves identifican de manera única una observación. Cuando unimos llaves duplicadas, obtenemos todas las combinaciones posibles, el producto cartesiano:
+
+
+![](../images/join-semi-many.png)
+
+
+```{r, message=FALSE, warning=FALSE}
+x <- tribble(
+  ~key, ~val_x,
+     1, "x1",
+     2, "x2",
+     2, "x3",
+     3, "x4"
+)
+y <- tribble(
+  ~key, ~val_y,
+     1, "y1",
+     2, "y2",
+     2, "y3",
+     3, "y4"
+)
+left_join(x, y, by = "key")
+```
+
+
+#### Definir las columnas llave
+
+Hasta ahora, los pares de tablas siempre han estado unidos por una sola variable, y esa variable tiene el mismo nombre en ambas tablas. Esa restricción fue codificada por `by = "key"`. Podemos usar otros valores de `by` para conectar las tablas de otras formas:
+
+
++ El predeterminado, `by = NULL` usa todas las variables que aparecen en ambas tablas, la llamada unión **natural**. Por ejemplo, las tablas `flights` y `weather` coinciden en sus variables comunes: `year`, `month`, `day`, `hour` y `origin`.
+
+
+```{r, message=FALSE, warning=FALSE}
+flights2 %>% 
+  left_join(weather)
+```
+
+
+
++ Un vector de caracteres, `by = "x"`. Esto es como una unión natural, pero usa solo algunas de las variables comunes. Por ejemplo, `flights` y `planes` tienen la variable `year`, pero significan cosas diferentes, por lo que solo queremos unirlas por `tailnum`.
+
+
+```{r, message=FALSE, warning=FALSE}
+flights2 %>% 
+  left_join(planes, by = "tailnum")
+```
+
+
+Notemos que las variables `year` (que aparecen en ambas tablas de entrada, pero no están obligadas a ser iguales) se desambiguan en la salida con un sufijo.
+
+
++ Un vector de caracteres nombrado: `by = c("a" = "b")`. Esto hará coincidir la variable `a` en la tabla `x` con la variable `b` en la tabla `y`. Las variables de `x` se usarán en la salida.
+
+Por ejemplo, si queremos dibujar un mapa, necesitamos combinar los datos de los vuelos con los datos de los aeropuertos que contienen la ubicación (`lat` y `lon`) de cada aeropuerto. Cada vuelo tiene un aeropuerto de origen y uno de destino, por lo que debemos especificar con cuál queremos unir:
+
+
+```{r, message=FALSE, warning=FALSE}
+flights2 %>% 
+  left_join(airports, c("dest" = "faa"))
+```
+
+```{r, message=FALSE, warning=FALSE}
+flights2 %>% 
+  left_join(airports, c("origin" = "faa"))
+```
+
+
+### Filtrado de uniones
+
+El filtrado une las observaciones de coincidencia de la misma forma que las uniones mutantes, pero afecta las observaciones, no las variables. Hay dos tipos:
+
+
++ `semi_join(x, y)` **mantiene** todas las observaciones en `x` que tienen una coincidencia en `y`.
+
++ `anti_join(x, y)` **descarta** todas las observaciones en `x` que tienen una coincidencia en `y`.
+
+
+Las semiuniones son útiles para hacer coincidir las tablas de resumen filtradas con las filas originales. Por ejemplo, imaginemos que hemos encontrado los diez destinos más populares:
+
+```{r, message=FALSE, warning=FALSE}
+top_dest <- flights %>%
+  count(dest, sort = TRUE) %>%
+  head(10)
+top_dest
+```
+
+
+Ahora queremos encontrar cada vuelo que fue a uno de esos destinos. Nosotros mismos podemos construir un filtro:
+
+```{r, message=FALSE, warning=FALSE}
+flights %>% 
+  filter(dest %in% top_dest$dest)
+```
+
+Pero es difícil extender ese enfoque a múltiples variables. Por ejemplo, imaginemos que encontramos los 10 días con las demoras promedio más altas. ¿Cómo construímos la instrucción de filtro que utiliza `year`, `month` y  `day` para que coincida de nuevo con `flights`?
+
+En su lugar, podemos usar una semi unión, que conecta las dos tablas como una unión mutante, pero en lugar de agregar nuevas columnas, solo conserva las filas de `x` que tienen una coincidencia en `y`:
+
+
+```{r, message=FALSE, warning=FALSE}
+flights %>% 
+  semi_join(top_dest)
+```
+
+
+Gráficamente, una semi-unión se ve así:
+
+![](../images/join-semi.png)
+
+La sola existencia de una coincidencia es importante, no importa qué observación coincida. Esto significa que las uniones de filtro nunca duplican las filas como lo hacen las uniones mutantes:
+
+
+![](../images/join-semi-many.png)
+
+
+El inverso de una semi unión es una anti unión. Un `anti_join` mantiene las filas que no tienen una coincidencia:
+
+![](../images/join-anti.png)
+
+
+Las anti uniones son útiles para diagnosticar desajustes de unión. Por ejemplo, al conectar `flights` y `planes`, es posible que nos interese saber que hay muchos `flights` que no coinciden en `planes`:
+
+
+```{r, message=FALSE, warning=FALSE}
+flights %>%
+  anti_join(planes, by = "tailnum") %>%
+  count(tailnum, sort = TRUE)
+```
+
+
+### Problemas de Unión
+
+La información con la que hemos estado trabajando está limpia. Es poco probable que los datos a los que te enfrentes en la vida real sean tan agradables, por lo que hay algunas cosas que debes hacer para que las uniones funcionen sin problemas.
+
+
+1. Comienza por identificar las variables que forman la llave principal en cada tabla. Por lo general, debes hacer esto en función de tu comprensión de los datos y no empíricamente buscando una combinación de variables que proporcionen un identificador único. Si solo buscas variables sin pensar en lo que significan, puedes ser (o no) afortunado y encontrar una combinación que sea única en los datos, pero la relación podría no ser cierta en general.
+Por ejemplo, la altitud y la longitud identifican de manera única cada aeropuerto, ¡pero no son buenos identificadores!
+
+
+```{r, message=FALSE, warning=FALSE}
+airports %>% count(alt, lon) %>% filter(n > 1)
+```
+
+
+2. Comprueba que no falte ninguna de las variables en la llave primaria. Si falta un valor, ¡no puede identificar una observación!
+
+
+3. Verifica que las llaves foráneas coincidan con las llaves primarias en otra tabla. La mejor manera de hacerlo es con un `anti_join()`. Es común que las llaves no coincidan debido a errores de entrada de datos. Reparar estos a menudo es mucho trabajo.
+Si tienes llaves faltantes, deberás considerar cuidadosamente el uso de combinaciones internas y externas, teniendo en cuenta cuidadosamente si deseas colocar filas que no coincidan.
+
+
+Debemos tener en cuenta que simplemente verificar el número de filas antes y después de la unión no es suficiente para garantizar que la unión se haya realizado sin problemas. Si tenemos una unión interna con llaves duplicadas en ambas tablas, es posible que tengamos mala suerte, ya que la cantidad de filas descartadas puede ser exactamente igual a la cantidad de filas duplicadas.
+
+### Operaciones de Conjuntos
+
+El tipo final de verbo de dos tablas son las operaciones de conuntos. En general, se utilizan con menos frecuencia pero ocasionalmente son útiles cuando se quiere dividir un solo filtro complejo en piezas más simples. Todas estas operaciones funcionan con una fila completa, comparando los valores de cada variable. Estos esperan que las entradas en `x` y las entradas en `y` tengan las mismas variables y tratan las observaciones como conjuntos:
+
+
++ `intersect(x, y)`: solo devuelve observaciones en ambos `x` y `y`.
+
++ `union(x, y)`: devuelve observaciones únicas en `x` y `y`.
+
++ `setdiff(x, y)`: devuelve observaciones en `x`, pero no en `y`.
+
+
+Si tomamos estos datos simples:
+
+```{r, message=FALSE, warning=FALSE}
+df1 <- tribble(
+  ~x, ~y,
+   1,  1,
+   2,  1
+)
+df2 <- tribble(
+  ~x, ~y,
+   1,  1,
+   1,  2
+)
+```
+
+Las cuatro posibilidades son:
+
+```{r, message=FALSE, warning=FALSE}
+intersect(df1, df2)
+```
+
+Notemos aquí que obtenemos 3 filas, no 4:
+
+```{r, message=FALSE, warning=FALSE}
+union(df1, df2)
+```
+
+```{r, message=FALSE, warning=FALSE}
+setdiff(df1, df2)
+```
+
+```{r, message=FALSE, warning=FALSE}
+setdiff(df2, df1)
 ```
 
 #### Ejercicios
@@ -306,8 +753,6 @@ la variable tiempo y la distancia (en millas). ¿Qué vuelo fue el más rápido?
 
 11. ¿Qué otros resúmenes puedes hacer para explorar el retraso por fecha?
 
-12. ¿Qué destinos tienen el promedio de retrasos más alto?
-
 13. ¿Qué vuelos (compañía + vuelo) ocurren diario?
 
 14. En promedio, ¿cómo varían a lo largo del día los retrasos de vuelos no cancelados? (pista: hour + minute / 60)
@@ -317,6 +762,38 @@ la variable tiempo y la distancia (en millas). ¿Qué vuelo fue el más rápido?
 16. ¿Qué condiciones climáticas están asociadad con retrasos en las salidas de Houston?
 
 17. Explora si los aviones más viejos están asociados a mayores retrasos, responde con una gráfica.
+
+18. Calcula el retraso promedio por destino, luego une con la tabla `airports` para que puedas mostrar la distribución espacial de los retrasos. Aquí hay una manera fácil de dibujar un mapa de los Estados Unidos:
+
+
+```{r, message=FALSE, warning=FALSE, eval=FALSE, echo=TRUE}
+airports %>%
+  semi_join(flights, c("faa" = "dest")) %>%
+  ggplot(aes(lon, lat)) +
+    borders("state") +
+    geom_point() +
+    coord_quickmap()
+```
+
+Es posible que debas utilizar el `size` o `colour` de los puntos para mostrar el retraso promedio de cada aeropuerto.
+
+12. ¿Qué destinos tienen el promedio de retrasos más alto?
+
+19. Agrega la ubicación del origen y el destino (es decir, `lat` y `lon`) a `flights`.
+
+20. ¿Qué pasó el 13 de junio de 2013?
+
+¿Qué significa para un vuelo tener una falta tailnum? ¿Qué planestienen en común los números de cola que no tienen un registro coincidente ? (Sugerencia: una variable explica ~ 90% de los problemas).
+
+Filtra vuelos para mostrar solo vuelos con aviones que hayan volado al menos 100 vuelos.
+
+Combine fueleconomy::vehiclesy fueleconomy::commonencuentre solo los registros de los modelos más comunes.
+
+Encuentra las 48 horas (en el transcurso del año) que tienen las peores demoras. Haga una referencia cruzada con los weatherdatos. ¿Puedes ver algún patrón?
+
+¿Qué anti_join(flights, airports, by = c("dest" = "faa"))te dice? ¿Qué anti_join(airports, flights, by = c("faa" = "dest"))te dice?
+
+Es de esperar que exista una relación implícita entre el avión y la línea aérea, ya que cada avión es volado por una sola línea aérea. Confirme o rechace esta hipótesis usando las herramientas que aprendió anteriormente.
 
 <!-- #### Respuestas -->
 
