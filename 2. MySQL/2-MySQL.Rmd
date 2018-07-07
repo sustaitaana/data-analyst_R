@@ -758,13 +758,14 @@ setdiff(df2, df1)
 
 Para conectarnos a una base de datos, necesitamos 4 párametros (además del nombre de la base de datos):
 
-+ **host**: 
-+ **port**:
-+ **user**:
-+ **password**:
++ **host**: el IP del servidor en el que se encuentra la base de datos 
++ **port**: por default, MySQL usa el puerto 3306
++ **user**: es el usuario asignado por el administrador de la base de datos
++ **password**: contraseña para acceder a la base de datos
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 library(pool)
+library(DBI)
 library(RMySQL)
 
 db.host <- '127.0.0.1'
@@ -786,69 +787,165 @@ db_connect <- function(db.name) {
 }
 ```
 
-Nos conectamos a la base de datos `northwind` que creamos en MySQL:
+Podemos agregar una tabla (o varias) a la base de datos usando las mismas credenciales con las que nos conectamos a ella con la función `copy_to()`:
+
+```{r, message=FALSE, warning=FALSE, eval=FALSE, include=TRUE}
+copy_to(
+  db_connect('nycflights'), 
+  nycflights13::flights, 
+  "flights",
+  temporary = FALSE, 
+  indexes = list(
+    c("year", "month", "day"), 
+    "carrier", 
+    "tailnum",
+    "dest"
+  )
+)
+```
+
+Ahora que hemos copiado los datos, podemos utilizar `tbl()` para referenciarlos:
 
 ```{r, message=FALSE, warning=FALSE}
-northwind <- db_connect('northwind')
-employees <- tbl(northwind, 'Employees') %>% 
-  select(-Photo)
+flights_db <- tbl(db_connect('nycflights'), "flights")
 ```
 
-Notemos lo que pasa si imprimimos la tabla `employees`:
+Cuando lo imprimimos, notamos que en su mayoría se ve como un tibble normal:
 
 ```{r, eval=FALSE, message=FALSE, warning=FALSE, include=TRUE}
-employees
-# Source:   lazy query [?? x 18]
-# Database: mysql 10.1.33-MariaDB [root@127.0.0.1:/northwind]
-#   EmployeeID LastName  FirstName Title        TitleOfCourtesy
-#        <int> <chr>     <chr>     <chr>        <chr>          
-# 1          1 Davolio   Nancy     Sales Repre… Ms.            
-# 2          2 Fuller    Andrew    Vice Presid… Dr.            
-# 3          3 Leverling Janet     Sales Repre… Ms.            
-# 4          4 Peacock   Margaret  Sales Repre… Mrs.           
-# 5          5 Buchanan  Steven    Sales Manag… Mr.            
-# 6          6 Suyama    Michael   Sales Repre… Mr.            
-# 7          7 King      Robert    Sales Repre… Mr.            
-# 8          8 Callahan  Laura     Inside Sale… Ms.            
-# 9          9 Dodsworth Anne      Sales Repre… Ms.            
-# ... with 13 more variables: BirthDate <chr>,
-#   HireDate <chr>, Address <chr>, City <chr>, Region <chr>,
-#   PostalCode <chr>, Country <chr>, HomePhone <chr>,
-#   Extension <chr>, Notes <chr>, ReportsTo <int>,
-#   PhotoPath <chr>, Salary <dbl>
+flights_db 
+# Source:   table<flights> [?? x 19]
+# Database: mysql 10.1.33-MariaDB
+#   [root@127.0.0.1:/nycflights]
+#     year month   day dep_time sched_dep_time dep_delay
+#    <int> <int> <int>    <int>          <int>     <dbl>
+#  1  2013     1     1      517            515      2.00
+#  2  2013     1     1      533            529      4.00
+#  3  2013     1     1      542            540      2.00
+#  4  2013     1     1      544            545     -1.00
+#  5  2013     1     1      554            600     -6.00
+#  6  2013     1     1      554            558     -4.00
+#  7  2013     1     1      555            600     -5.00
+#  8  2013     1     1      557            600     -3.00
+#  9  2013     1     1      557            600     -3.00
+# 10  2013     1     1      558            600     -2.00
+# ... with more rows, and 13 more variables: arr_time <int>,
+#   sched_arr_time <int>, arr_delay <dbl>, carrier <chr>,
+#   flight <int>, tailnum <chr>, origin <chr>, dest <chr>,
+#   air_time <dbl>, distance <dbl>, hour <dbl>, minute <dbl>,
+#   time_hour <chr>
 ```
 
-Si queremos tener la tabla como un `data.frame` de R, debemos hacer un `collect` después del query que hicimos a la base de datos:
+La principal diferencia es que puede ver que es una fuente remota en una base de datos MySQL.
+
+### Generando consultas
+
+Para interactuar con una base de datos, generalmente usamos SQL, el lenguaje de consulta estructurado. SQL tiene más de 40 años y es utilizado por prácticamente todas las bases de datos existentes. 
+
+El objetivo de `dplyr` y `dbplyr` es generar automáticamente SQL para que no estemos obligados a usarlo. Sin embargo, SQL es un lenguaje muy grande y `dbplyr` no puede hacerlo todo. Se centra en la cláusula `SELECT`.
+
+La mayoría de las veces no necesitamos saber nada sobre SQL y podemos continuar usando los verbos `dplyr` con los que ya estamos familiarizados:
 
 ```{r, message=FALSE, warning=FALSE}
-employees <- tbl(northwind, 'Employees') %>% 
-  select(-Photo) %>% 
-  collect
+flights_db %>% select(year:day, dep_delay, arr_delay)
+
+flights_db %>% filter(dep_delay > 240)
+
+flights_db %>% 
+  group_by(dest) %>%
+  summarise(delay = mean(dep_time))
 ```
 
-Si imprimimos, nuevamente, la tabla `employees`, notemos la diferencia:
 
-```{r, eval=FALSE, message=FALSE, warning=FALSE, include=TRUE}
-employees
-# A tibble: 9 x 18
-#   EmployeeID LastName  FirstName Title        TitleOfCourtesy
-#        <int> <chr>     <chr>     <chr>        <chr>          
-# 1          1 Davolio   Nancy     Sales Repre… Ms.            
-# 2          2 Fuller    Andrew    Vice Presid… Dr.            
-# 3          3 Leverling Janet     Sales Repre… Ms.            
-# 4          4 Peacock   Margaret  Sales Repre… Mrs.           
-# 5          5 Buchanan  Steven    Sales Manag… Mr.            
-# 6          6 Suyama    Michael   Sales Repre… Mr.            
-# 7          7 King      Robert    Sales Repre… Mr.            
-# 8          8 Callahan  Laura     Inside Sale… Ms.            
-# 9          9 Dodsworth Anne      Sales Repre… Ms.            
-# ... with 13 more variables: BirthDate <chr>,
-#   HireDate <chr>, Address <chr>, City <chr>, Region <chr>,
-#   PostalCode <chr>, Country <chr>, HomePhone <chr>,
-#   Extension <chr>, Notes <chr>, ReportsTo <int>,
-#   PhotoPath <chr>, Salary <dbl>
+Sin embargo, a largo plazo, puede ser buena idea aprender los conceptos básicos de SQL. Es una habilidad valiosa para cualquier científico de datos.
+
+La diferencia más importante entre marcos de datos comunes y consultas de bases de datos remotas es que nuestro código R se traduce a SQL y se ejecuta en la base de datos, no en R. Al trabajar con bases de datos, `dplyr` intenta ser lo más flojo posible:
+
++ Nunca extrae datos en R a menos que lo solicitemos explícitamente.
+
++ Retrasa la realización de cualquier trabajo hasta el último momento posible: recopila todo lo que desea hacer y luego lo envía a la base de datos en un solo paso.
+  
+Por ejemplo, veamos el siguiente código:
+
+```{r, message=FALSE, warning=FALSE}
+tailnum_delay_db <- flights_db %>% 
+  group_by(tailnum) %>%
+  summarise(
+    delay = mean(arr_delay),
+    n = n()
+  ) %>% 
+  arrange(desc(delay)) %>%
+  filter(n > 100)
 ```
 
+
+Sorprendentemente, esta secuencia de operaciones nunca toca la base de datos. No es hasta que solicitamos los datos (por ejemplo, mediante la impresión `tailnum_delay_db`) que `dplyr` genera la consulta de SQL y solicita los resultados a la base de datos. Incluso entonces intenta hacer el menor trabajo posible y solo regresa unas pocas filas.
+
+```{r, message=FALSE, warning=FALSE, eval=FALSE, include=TRUE}
+tailnum_delay_db
+# Source:     lazy query [?? x 3]
+# Database:   mysql 10.1.33-MariaDB
+#   [root@127.0.0.1:/nycflights]
+# Ordered by: desc(delay)
+#    tailnum delay     n
+#    <chr>   <dbl> <dbl>
+#  1 <NA>    NA     2512
+#  2 N0EGMQ   9.98   371
+#  3 N10156  12.7    153
+#  4 N10575  20.7    289
+#  5 N11106  14.9    129
+#  6 N11107  15.0    148
+#  7 N11109  14.9    148
+#  8 N11113  15.8    138
+#  9 N11119  30.3    148
+# 10 N11121  10.3    154
+# ... with more rows
+```
+
+Detrás de escena, `dplyr` está traduciendo nuestro código R en SQL. Podemos ver la consulta SQL que está generando con `show_query()`:
+
+```{r, message=FALSE, warning=FALSE}
+tailnum_delay_db %>% show_query()
+```
+
+Probablemente no es exactamente lo que escribiríamos a mano si hiciéramos la consulta directo en SQL, pero cumple su función. Podemos obtener más información sobre la traducción a SQL en `vignette("sql-translation")`.
+
+Normalmente, repetiremos varias veces antes de averiguar qué datos necesitamos realmente de la base de datos. Una vez que lo hayamos descifrado, debemos usar `collect()` para guardar todos los datos a un `tibble` o `data.frame` local:
+
+```{r, message=FALSE, warning=FALSE, include=TRUE, eval=FALSE}
+tailnum_delay <- tailnum_delay_db %>% collect()
+tailnum_delay
+# A tibble: 1,201 x 3
+#    tailnum delay     n
+#    <chr>   <dbl> <dbl>
+#  1 <NA>    NA     2512
+#  2 N0EGMQ   9.98   371
+#  3 N10156  12.7    153
+#  4 N10575  20.7    289
+#  5 N11106  14.9    129
+#  6 N11107  15.0    148
+#  7 N11109  14.9    148
+#  8 N11113  15.8    138
+#  9 N11119  30.3    148
+# 10 N11121  10.3    154
+# ... with 1,191 more rows
+```
+
+
+`collect()` requiere que la base de datos haga algo de trabajo, por lo que puede llevar mucho tiempo completarla. De lo contrario, `dplyr` intenta evitar que realice accidentalmente costosas operaciones de consulta por dos motivos:
+
++ Porque generalmente no hay forma de determinar cuántas filas devolverá una consulta a menos que realmente la ejecutemos, `nrow()` siempre nos regresa `NA`.
+
++ Como no puede encontrar las últimas filas sin ejecutar toda la consulta, no podemos usar `tail()`.
+
+```{r, message=FALSE, warning=FALSE}
+nrow(tailnum_delay_db)
+
+tail(tailnum_delay_db)
+```
+
+
+También podemos preguntar a la base de datos cómo planea ejecutar la consulta, usando `explain()`. El resultado depende de la base de datos, y puede ser medio esotérico, pero aprender un poco al respecto puede ser muy útil porque nos ayuda a entender si la base de datos puede ejecutar consultas de manera eficiente, o si necesitamos crear nuevos índices.
 
 
 ## Ejercicios
