@@ -1045,6 +1045,138 @@ Es posible que debas utilizar el `size` o `colour` de los puntos para mostrar el
 
 <!-- ### Respuestas -->
 
+<!-- ### Respuestas de Sinué -->
+1. ¿Cuál es el aeropuerto con mayor tráfico de entrada? (vuelos diferentes) Ocupa en tu respuesta el nombre del aeropuerto (`join`)
+```{r, message=FALSE, warning=FALSE}
+aux_flilght <- flights %>% 
+  select(dest, flight) %>%
+  group_by(dest, flight) %>%
+  summarise(n = n())
+```
+
+```{r, message=FALSE, warning=FALSE}
+aux_flilght2 <- aux_flilght %>% 
+  count(dest) %>% 
+  arrange(desc(nn))
+```
+
+```{r, message=FALSE, warning=FALSE}
+aiport_dest <- aux_flilght2 %>%
+  inner_join(airports, c("dest" = "faa"))
+```
+
+2. Encuentra los vuelos con un retraso mayor a una hora.
+```{r, message=FALSE, warning=FALSE}
+arr_delays_more_than_1hour <- flights %>% 
+  filter(arr_delay > 60) %>% 
+  mutate(delay = arr_delay/60) %>% 
+  arrange(desc(delay))
+
+dep_delays_more_than_1hour <- flights %>% 
+  filter(dep_delay > 60) %>% 
+  mutate(delay = dep_delay/60) %>% 
+  arrange(desc(delay))
+
+delays_more_than_1hour <- flights %>% 
+  filter(arr_delay > 0 | dep_delay > 0) %>% 
+  mutate(delay = arr_delay + dep_delay) %>% 
+  filter(delay > 60) %>% 
+  mutate(delay = delay/60) %>% 
+  arrange(desc(delay))
+```
+
+3. Encuentra los vuelos en los que el retraso de llegada es más del doble que el retraso de salida.
+```{r, message=FALSE, warning=FALSE}
+flighst_3 <- flights %>% 
+  filter(arr_delay > 0, arr_delay > 0) %>% 
+  filter(arr_delay > 2*dep_delay) %>% 
+  arrange(desc(arr_delay))
+```
+
+4. Ve la ayuda de select (`?select`) y escribe tres
+maneras de seleccionar las variables de retraso (delay).
+```{r, message=FALSE, warning=FALSE}
+is_more_than_1hour <- function(delay) delay>60
+retrasos <- flights %>% 
+  select_all(is_more_than_1hour(arr_delay))
+retrasos <- flights %>% 
+  select_if(is_more_than_1hour(delay))
+retrasos <- flights %>% 
+  select_at(is_more_than_1hour)
+```
+
+5. ¿Cuál es la aerolínea con mayor retraso de salida por día de la semana? `departure_delay`
 ```{r, message=FALSE, warning=FALSE}
 
 ```
+
+6. ¿Qué aerolínea deberíamos tomar para tener la menor demora posible para llegar a Detroit? (ocupa `arrival_delay` como métrica, por qué ocupar esa variable?) 
+
+7. Calcula la velocidad en millas por hora a partir de
+la variable tiempo y la distancia (en millas). ¿Qué vuelo fue el más rápido?
+
+8. Crea una nueva variable que muestre cuánto tiempo se ganó o perdió durante el vuelo. ¿Qué vuelos _ganaron_ más tiempo en el aire?
+
+9. Calcula el retraso de llegada promedio por fecha.
+
+10. ¿Qué vuelos (compañía + vuelo) ocurren diario?
+
+11. En promedio, ¿cómo varían a lo largo del día los retrasos de vuelos no cancelados? (pista: hour + minute / 60)
+
+12. ¿En qué día de la semana se tienen menor cantidad de retrasos de salida por aeropuerto?
+
+13. ¿Cuál es la 32va aerolínea con mayor diversidad de vuelos de entrada? Utiliza `rank`
+
+14. Explora si los aviones más viejos están asociados a mayores retrasos, responde con una gráfica.
+
+15. Calcula el retraso promedio por destino, luego une con la tabla `airports` para que puedas mostrar la distribución espacial de los retrasos. Aquí hay una manera fácil de dibujar un mapa de los Estados Unidos:
+
+
+```{r, message=FALSE, warning=FALSE, eval=FALSE, echo=TRUE}
+airports %>%
+  semi_join(flights, c("faa" = "dest")) %>%
+  ggplot(aes(lon, lat)) +
+    borders("state") +
+    geom_point() +
+    coord_quickmap()
+```
+
+Es posible que debas utilizar el `size` o `colour` de los puntos para mostrar el retraso promedio de cada aeropuerto.
+
+16. ¿Qué destinos tienen el promedio de retrasos más alto?
+
+17. Agrega la ubicación del origen y el destino (es decir, `lat` y `lon`) a `flights`.
+
+18. ¿Qué pasó el 13 de junio de 2013?
+
+19. ¿Qué significa para un vuelo tener un `tailnum` faltante? ¿Qué tienen en común los números de cola que no tienen un registro coincidente en `planes`? (Sugerencia: una variable explica ~ 90% de los problemas).
+
+20. Filtra vuelos para mostrar solo aquellos aviones que hayan volado al menos 100 vuelos.
+
+21. Encuentra las 48 horas (en el transcurso del año) que tienen las peores demoras. Haz una referencia cruzada con los datos de `weather`. ¿Puedes ver algún patrón?
+
+22. ¿Qué te dice `anti_join(flights, airports, by = c("dest" = "faa"))`? ¿Qué te dice `anti_join(airports, flights, by = c("faa" = "dest"))`?
+
+23. Es de esperar que exista una relación implícita entre el avión y la línea aérea, ya que cada avión es volado por una sola línea aérea. Confirma o rechaza esta hipótesis usando las herramientas que aprendimos.
+
+24. ¿Cuántas órdenes diferentes hay en tu dataset?
+
+25. ¿De qué fechas tenemos datos? (año, mes y día mínimo y máximo)?
+
+26. ¿Con qué granularidad están los datos -por día-, es decir, tenemos datos diarios, solo entre semana? ¿Existen gaps en las fechas (días sin registro de órdenes)?
+
+27. ¿Cuál es el delta de tiempo más grande entre una orden y otra -en días-? Utiliza `lag` en tu respuesta y `datediff` 
+
+28. ¿Cuál es el delta de tiempo más pequeño entre una orden y otra -en minutos o segundos-? Utiliza `lag` en tu respuesta y `datediff`
+
+29. ¿Cuál es el 7mo producto más vendido? Utiliza `rank` en tu respuesta
+
+30. ¿Cuál es el 5to producto más vendido por mes? Utiliza `rank` en tu respuesta
+
+31. ¿Cuáles son jefes? Revisa el atributo `reportsto` indica su nombre `firstname`, apellido `lastname`, departamento al que pertenece `title`, desde cuándo está en la compañía `hiredate` y cuántos empleados tiene a su cargo
+
+32. Por cada "jefe" muestra el nombre `firstname` y apellido `lastname` del jefe seguido de un arreglo de id empleados `employeeid` de los empleados que tiene a su cargo. Utiliza `array_agg` en tu respuesta
+
+33. ¿Cuál es el promedio de productos vendidos por orden y mes? 
+
+34. ¿En qué lugar de ventas se encuentra México? (ventas a enviar a México) Ocupa `rank` en tu respuesta
