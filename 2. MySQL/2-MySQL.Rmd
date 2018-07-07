@@ -958,6 +958,189 @@ tail(tailnum_delay_db)
 
 Tambi??n podemos preguntar a la base de datos c??mo planea ejecutar la consulta, usando `explain()`. El resultado depende de la base de datos, y puede ser medio esot??rico, pero aprender un poco al respecto puede ser muy ??til porque nos ayuda a entender si la base de datos puede ejecutar consultas de manera eficiente, o si necesitamos crear nuevos ??ndices.
 
+## Window Functions
+
+Una **funci??n de ventana** es una variaci??n de una funci??n de agregaci??n. Cuando una funci??n de agregaci??n, como `sum()` y `mean()`, toma $n$ entradas y devuelve un ??nico valor, una funci??n de ventana devuelve $n$ valores. La salida de una funci??n de ventana depende de todos sus valores de entrada, por lo que no incluyen funciones que sean utilizadas elemento a elemento, como `+` o `round()`. Las funciones de ventana incluyen variaciones en las funciones de agregaci??n, como `cumsum()` y `cummean()`, funciones para clasificar y ordenar como `rank()`, y funciones para encontrar contrapesos, como `lead()` y `lag()`.
+
+Usaremos una peque??a muestra del conjunto de datos de bateo de `Lahman`, que contiene a los jugadores que han ganado un premio.
+
+```{r, message=FALSE, warning=FALSE}
+library(Lahman)
+
+batting <- Lahman::Batting %>%
+  as_tibble() %>%
+  select(playerID, yearID, teamID, G, AB:H) %>%
+  arrange(playerID, yearID, teamID) %>%
+  semi_join(Lahman::AwardsPlayers, by = "playerID")
+
+players <- batting %>% group_by(playerID)
+```
+
+Las funciones de ventana regularmente se utilizan junto con `mutate()` y `filter()` para resolver una amplia gama de problemas. Por ejemplo:
+
++ Por cada jugador, encuentra los dos a??os con m??s hits
+
+```{r, message=FALSE, warning=FALSE}
+filter(players, min_rank(desc(H)) <= 2 & H > 0)
+```
+
++ Para cada jugador, clasifica cada a??o por la cantidad de juegos jugados
+
+```{r, message=FALSE, warning=FALSE}
+mutate(players, G_rank = min_rank(G))
+```
+
++ Para cada jugador, calcula el cambio promedio en los juegos jugados por a??o
+
+```{r, message=FALSE, warning=FALSE}
+mutate(players, G_change = (G - lag(G)) / (yearID - lag(yearID)))
+```
+
+### Tipos de window functions
+
+Hay cinco familias principales de funciones de ventana. Dos de las cuales no est??n relacionadas con las funciones de agregaci??n:
+
++ Funciones de clasificaci??n y ordenamiento: `row_number()`, `min_rank()`, `dense_rank()`, `cume_dist()`, `percent_rank()`, y `ntile()`. Todas estas funciones toman un vector para ordenar y devuelven varios tipos de rangos.
+
++ Contrapesos `lead()` y `lag()` permiten acceder a los valores anteriores y siguientes en un vector, lo que facilita el c??lculo de diferencias y tendencias.
+
+Las otras tres familias son variaciones en las funciones de agregaci??n que ya conocemos:
+
++ Agregaciones acumulativas: `cumsum()`, `cummin()`, `cummax()` (de la base R), y `cumall()`, `cumany()` y `cummean()` (de `dplyr`).
+
++ Las agregaciones m??viles operan en una ventana de ancho fijo. Estos no son parte de R base ni de `dplyr`, pero hay muchas implementaciones en otros paquetes, como [RcppRoll](https://cran.r-project.org/web/packages/RcppRoll/index.html).
+  
++ Agregaciones recicladas, donde se repite una agregaci??n para que coincida con la longitud de la entrada. Estos no son necesarios en R porque el reciclaje de vectores recicla las agregaciones autom??ticamente cuando es necesario. Son importantes en SQL, porque la presencia de una funci??n de agregaci??n generalmente le dice a la base de datos que devuelva solo una fila por grupo.
+
+#### rank
+
+Las funciones de clasificaci??n son variaciones de un mismo tema, s??lo cambia c??mo se manejan las ligas a los datos:
+
+```{r, message=FALSE, warning=FALSE}
+x <- c(1, 1, 2, 2, 2)
+
+row_number(x)
+
+min_rank(x)
+
+dense_rank(x)
+```
+
+Otras dos funciones de clasificaci??n devuelven n??meros entre 0 y 1. `percent_rank()` da el porcentaje del rango mientras que `cume_dist()` da la proporci??n de valores menores o iguales que el valor actual.
+
+```{r, message=FALSE, warning=FALSE}
+cume_dist(x)
+
+percent_rank(x)
+```
+
+Estos son ??tiles si deseamos seleccionar (por ejemplo) el 10% superior de registros dentro de cada grupo. Por ejemplo:
+
+```{r, message=FALSE, warning=FALSE}
+filter(players, cume_dist(desc(G)) < 0.1)
+```
+
+Finalmente, `ntile()` divide los datos en $n$-cubos de tama??o uniforme. Es una clasificaci??n aproximada, y se puede utilizar `mutate()` para dividir los datos en segmentos para un resumen posterior. 
+
+Por ejemplo, podr??amos usar `ntile()` para dividir a los jugadores dentro de un equipo en cuatro grupos clasificados y calcular el n??mero promedio de juegos dentro de cada grupo.
+
+```{r, message=FALSE, warning=FALSE}
+by_team_player <- group_by(batting, teamID, playerID)
+by_team <- summarise(by_team_player, G = sum(G))
+by_team_quartile <- group_by(by_team, quartile = ntile(G, 4))
+summarise(by_team_quartile, mean(G))
+```
+
+Todas las funciones de clasificaci??n se clasifican de menor a mayor, por lo que los valores de entrada peque??os obtienen rangos peque??os. Debemos usar `desc()` para clasificar de mayor a menor.
+
+#### lead & lag
+
+`lead()` y `lag()` producen versiones "movidas" de un vector de entrada que est?? por delante o por detr??s del vector original.
+
+```{r, message=FALSE, warning=FALSE}
+x <- 1:5
+lead(x)
+lag(x)
+```
+
+Se pueden usar para:
+
++ Calcular las diferencias o los cambios porcentuales.
+
+```{r, message=FALSE, warning=FALSE}
+mutate(players, G_delta = G - lag(G))
+```
+
+El uso `lag()` es m??s conveniente que `diff()` ya que para las $n$ entradas `diff()` devuelve $n - 1$ salidas.
+
++ Averiguar cu??ndo cambia un valor.
+
+```{r, message=FALSE, warning=FALSE}
+filter(players, teamID != lag(teamID))
+```
+
+`lead()` y `lag()` tienen un argumento opcional `order_by`. Si se establece, en lugar de usar el orden de fila para determinar qu?? valor viene antes que otro, usar??n otra variable. Esto es importante si no tenemos ordenados los datos, o si deseamos ordenarlos de una manera y retrasarlos.
+
+Aqu?? un peque??o ejemplo de lo que sucede si no especificamos `order_by` cuando es necesario:
+
+```{r, message=FALSE, warning=FALSE}
+df <- data.frame(year = 2000:2005, value = (0:5) ^ 2)
+scrambled <- df[sample(nrow(df)), ]
+
+wrong <- mutate(scrambled, running = cumsum(value))
+arrange(wrong, year)
+
+right <- mutate(scrambled, running = order_by(year, cumsum(value)))
+arrange(right, year)
+```
+
+
+#### Agregaciones acumulativas
+
+En R base tenemos algunas funciones acumultavias como la suma (`cumsum()`), el m??nimo (`cummin()`) y el m??ximo (`cummax()`). Otras funciones de acumulaci??n comunes son `cumany()` y `cumall()`, versiones acumulativas de `||` y `&&`, y `cummean()`, una media acumulativa. Estas pertenecen a `dplyr`.
+
+`cumany()` y `cumall()` son ??tiles para seleccionar todas las filas hasta, o todas las filas posteriores a una condici??n que es verdadera la primera (o ??ltima) vez. Por ejemplo, podemos usar `cumany()` para encontrar todos los registros de un jugador despu??s de que haya jugado un a??o con 150 juegos:
+
+```{r, message=FALSE, warning=FALSE}
+filter(players, cumany(G > 150))
+```
+
+Al igual que con lead y lag, es posible que deseemos controlar el orden en que se produce la acumulaci??n. Ninguna de las funciones integradas tienen un argumento `order_by` argumento por lo que `dplyr` nos ofrece un ayudante: la funci??n `order_by()`:
+
+```{r, message=FALSE, warning=FALSE}
+x <- 1:10
+y <- 10:1
+order_by(y, cumsum(x))
+```
+
+Esta funci??n usa evaluaci??n no est??ndar, por lo que no es recomendable usarla dentro de otra funci??n, en su lugar se recomienda usar el m??s simple pero menos conciso `with_order()`.
+
+#### Agregaciones recicladas
+
+El reciclaje de vector de R facilita la selecci??n de valores que son m??s altos o m??s bajos que un resumen. Se llaman agregaciones recicladas porque el valor del agregado se recicla para que tenga la misma longitud que el vector original. Son ??tiles si estamos buscando todos los registros mayores que la media o menores que la mediana:
+
+
+```{r, message=FALSE, warning=FALSE}
+filter(players, G > mean(G))
+filter(players, G < median(G))
+```
+
+Si bien la mayor??a de las bases de datos SQL no tienen un equivalente de `median()` o `quantile()`, al filtrar podemos lograr el mismo efecto con `ntile()`. 
+
+Por ejemplo, `x > median(x)` es equivalente a `ntile(x, 2) == 2`, `x > quantile(x, 75)` es equivalente a `ntile(x, 100) > 75` o `ntile(x, 4) > 3`.
+
+```{r, message=FALSE, warning=FALSE}
+filter(players, ntile(G, 2) == 2)
+```
+
+Tambi??n podemos usar esta idea para seleccionar los registros con el valor m??s alto (`x == max(x)`) o m??s bajo (`x == min(x)`) para un campo, pero las funciones de clasificaci??n nos brindan m??s control y nos permiten seleccionar cualquier cantidad de registros.
+
+Las agregaciones recicladas tambi??n son ??tiles en conjunto con `mutate()`. Por ejemplo, con los datos de bateo, podr??amos calcular el "a??o de carrera", el n??mero de a??os que un jugador ha jugado desde que ingres?? a la liga:
+
+```{r, message=FALSE, warning=FALSE}
+mutate(players, career_year = yearID - min(yearID) + 1)
+```
+
 
 ## Ejercicios
 
@@ -1043,7 +1226,9 @@ Es posible que debas utilizar el `size` o `colour` de los puntos para mostrar el
 
 34. ??En qu?? lugar de ventas se encuentra M??xico? (ventas a enviar a M??xico) Ocupa `rank` en tu respuesta
 
-<!-- ### Respuestas -->
+35. Para cada jugador de la tabla `Lahman::Batting`, busca todos aquellos que hayan jugado m??s juegos que el promedio
+
+### Respuestas Todos -->
 
 ```{r, message=FALSE, warning=FALSE}
 
@@ -1094,9 +1279,4 @@ flights %>% select(ends_with("delay")) %>% head()
 #Segunda forma
 flights %>% select(dep_delay, arr_delay) %>% head()
 ```
-
-
-
-
-
 
