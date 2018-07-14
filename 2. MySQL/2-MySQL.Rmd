@@ -1545,9 +1545,11 @@ orders_tbl %>%
 25. ¿De qué fechas tenemos datos? (año, mes y día mínimo y máximo)?
 ```{r, message=FALSE, warning=FALSE}
 #Convirtiendo a data frame o tibble
-dates <- orders_tbl %>% 
+orders_df <- orders_tbl %>% 
   arrange('OrderDate') %>% 
-  collect() %>%
+  collect()
+  
+dates <- orders_df %>% 
   select(OrderDate)
 
 dates %>% head(1)
@@ -1589,6 +1591,14 @@ orders_details_df %>%
 
 30. ¿Cuál es el 5to producto más vendido por mes? Utiliza `rank` en tu respuesta
 ```{r, message=FALSE, warning=FALSE}
+orders_dates <- orders_df %>% 
+  left_join(orders_details_df, By = 'OrderID') %>%
+  mutate(month_order = month(OrderDate)) %>% 
+  group_by(month_order, ProductID) %>% 
+  summarise(count = n()) %>% 
+  mutate(rank = row_number(desc(count))) %>% 
+  filter(rank == 5)
+  
 ```
 
 31. ¿Cuáles son jefes? Revisa el atributo `reportsto` indica su nombre `firstname`, apellido `lastname`, departamento al que pertenece `title`, desde cuándo está en la compañía `hiredate` y cuántos empleados tiene a su cargo
