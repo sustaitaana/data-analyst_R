@@ -1231,6 +1231,12 @@ Es posible que debas utilizar el `size` o `colour` de los puntos para mostrar el
 ### Respuestas Todos -->
 
 <!-- ### Respuestas de Sinué -->
+Cargar data frames
+```{r, message=FALSE, warning=FALSE}
+install.packages("tidyverse")
+install.packages("nycflights13")
+library(dplyr)
+```
 1. ¿Cuál es el aeropuerto con mayor tráfico de entrada? (vuelos diferentes) Ocupa en tu respuesta el nombre del aeropuerto (`join`)
 ```{r, message=FALSE, warning=FALSE}
 aux_flilght <- flights %>% 
@@ -1370,6 +1376,15 @@ flights %>%
 
 13. ¿Cuál es la 32va aerolínea con mayor diversidad de vuelos de entrada? Utiliza `rank`
 ```{r, message=FALSE, warning=FALSE}
+airlines %>% count()
+```
+Sólo hay 16 aerolíneas, entonces el número de aeropuertos o carrieras tendría más sentido si se quisiera conocer un rank así, por lo que escogemos aeropuertos
+```{r, message=FALSE, warning=FALSE}
+flights %>% 
+  group_by(dest) %>% 
+  summarise(num_arr_flights = n()) %>% 
+  filter(min_rank(num_arr_flights) == 32) %>% 
+  left_join(nycflights13::airports, c("dest" = "faa"))
 ```
 
 14. Explora si los aviones más viejos están asociados a mayores retrasos, responde con una gráfica.
@@ -1396,6 +1411,15 @@ Es posible que debas utilizar el `size` o `colour` de los puntos para mostrar el
 
 17. Agrega la ubicación del origen y el destino (es decir, `lat` y `lon`) a `flights`.
 ```{r, message=FALSE, warning=FALSE}
+flights17 <- flights %>% 
+  left_join(nycflights13::airports, c("origin" = "faa")) %>% 
+  rename(lat_origin = lat, lon_origin = lon) %>% 
+  select(-c(name, alt, tz, dst, tzone)) %>% 
+  left_join(nycflights13::airports, c("dest" = "faa")) %>% 
+  rename(lat_dest = lat, lon_dest = lon) %>% 
+  select(-c(name, alt, tz, dst, tzone))
+
+flights17
 ```
 
 18. ¿Qué pasó el 13 de junio de 2013?
@@ -1405,30 +1429,129 @@ junio_13 <- flights %>%
 ```
 19. ¿Qué significa para un vuelo tener un `tailnum` faltante? ¿Qué tienen en común los números de cola que no tienen un registro coincidente en `planes`? (Sugerencia: una variable explica ~ 90% de los problemas).
 ```{r, message=FALSE, warning=FALSE}
+flights %>% filter(is.na(tailnum)) %>% head()
+```
+-Puede significar que no se ejecutó el vuelo, porque no tienen datos de tiempo de vuelo con registro
+
+Registros donde no hay coincidencia
+```{r, message=FALSE, warning=FALSE}
+tail_but_no_plane <- flights %>% 
+  left_join(planes, by = "tailnum") %>% 
+  filter(!is.na(tailnum) & is.na(type))
+
+tail_but_no_plane
 ```
 
 20. Filtra vuelos para mostrar solo aquellos aviones que hayan volado al menos 100 vuelos.
 ```{r, message=FALSE, warning=FALSE}
+flights %>%
+  group_by(tailnum) %>%
+  summarise(num_flights = n()) %>% 
+  filter(num_flights > 99) %>% 
+  arrange(desc(num_flights))
 ```
 
 21. Encuentra las 48 horas (en el transcurso del año) que tienen las peores demoras. Haz una referencia cruzada con los datos de `weather`. ¿Puedes ver algún patrón?
 ```{r, message=FALSE, warning=FALSE}
+flights_48_hours <- flights %>% 
+  select(flight, year, month, day, origin, dest, arr_delay, dep_delay) %>%
+  group_by(year, month, day) %>% 
+  summarise(mean_arr_delay = mean(arr_delay, na.rm = TRUE), mean_dep_delay = mean(dep_delay, na.rm = TRUE)) %>% 
+  mutate(total_delay = mean_arr_delay + mean_dep_delay) %>% 
+  mutate(delay_48_hours_1 = total_delay + (lag(total_delay))) %>%
+  mutate(delay_48_hours_2 = total_delay + (lead(total_delay))) %>% 
+  arrange(desc(delay_48_hours_1)) %>% 
+  head(1) %>% 
+  left_join(nycflights13::weather)
+```
+
+```{r}
+flights %>%
+  filter(arr_delay > 0) %>%
+  group_by(time_hour) %>% dplyr::summarise(sum = sum(arr_delay, na.rm = TRUE)) %>% 
+  arrange(desc(sum)) %>% 
+  head(48) %>% 
+  left_join(weather, by = "time_hour") %>% #Por cada hora, se tienen tres registros en weather, uno por cada estación climatológica, por lo que se hace un promedio entre los tres valores resultantes.
+  group_by(time_hour) %>% dplyr::summarise(mean_temp = mean(temp, na.rm = TRUE), mean_wind_dir = mean(wind_dir, na.rm = TRUE), mean_wind_speed = mean(wind_speed, na.rm = TRUE))
+  
 ```
 
 22. ¿Qué te dice `anti_join(flights, airports, by = c("dest" = "faa"))`? ¿Qué te dice `anti_join(airports, flights, by = c("faa" = "dest"))`?
-```{r, message=FALSE, warning=FALSE}
-```
+
+1.- Descarta lo que no haya coincidente entre flights y airports, de flights
+2.- Descarta lo que no haya coincidente entre flights y airports, de airports
 
 23. Es de esperar que exista una relación implícita entre el avión y la línea aérea, ya que cada avión es volado por una sola línea aérea. Confirma o rechaza esta hipótesis usando las herramientas que aprendimos.
 ```{r, message=FALSE, warning=FALSE}
+flights %>% 
+  group_by(tailnum, carrier) %>%
+  summarise(n()) %>% 
+  group_by(tailnum, carrier) %>%
+  arrange(tailnum) %>% 
+  mutate(is_diffeten_than_above = (tailnum == lag(tailnum))) %>% 
+  filter(is_diffeten_than_above == TRUE)
 ```
+Por lo que la hipótesis no se rechaza
 
+Instalar paquetes para manejo de SQL
+```{r}
+install.packages("pool")
+install.packages("DBI")
+install.packages("RMySQL")
+```
 24. ¿Cuántas órdenes diferentes hay en tu dataset?
+
 ```{r, message=FALSE, warning=FALSE}
+library(pool)
+library(DBI)
+library(RMySQL)
+
+db.host <- 'localhost'
+db.user <- 'root'
+db.port <- 3306
+db.password <- 'Calderon260'
+
+## DB Connection
+db_connect <- function(db.name) {
+  db <- dbPool(
+    drv = RMySQL::MySQL(),
+    dbname = db.name,
+    host = db.host,
+    user = db.user,
+    password = db.password,
+    port = as.numeric(db.port)
+  )
+  
+  return(db)
+}
 ```
 
+```{r}
+orders_tbl <- tbl(db_connect('Northwind'), "Orders")
+```
+
+Se verifica que los OrderID sean únicos
+```{r}
+orders_tbl %>% group_by(OrderID) %>% count() %>% filter(n > 1)
+```
+
+Si lo son, entonces podemos filtrar por OrderID
+```{r}
+orders_tbl %>% 
+  group_by(OrderID) %>% 
+  summarise(n = n()) %>% 
+  count(n)
+```
 25. ¿De qué fechas tenemos datos? (año, mes y día mínimo y máximo)?
 ```{r, message=FALSE, warning=FALSE}
+#Convirtiendo a data frame o tibble
+dates <- orders_tbl %>% 
+  arrange('OrderDate') %>% 
+  collect() %>%
+  select(OrderDate)
+
+dates %>% head(1)
+dates %>% tail(1)
 ```
 
 26. ¿Con qué granularidad están los datos -por día-, es decir, tenemos datos diarios, solo entre semana? ¿Existen gaps en las fechas (días sin registro de órdenes)?
@@ -1437,14 +1560,31 @@ junio_13 <- flights %>%
 
 27. ¿Cuál es el delta de tiempo más grande entre una orden y otra -en días-? Utiliza `lag` en tu respuesta y `datediff` 
 ```{r, message=FALSE, warning=FALSE}
+dates %>%
+  arrange(OrderDate) %>% 
+  mutate(date_dif_days = difftime(OrderDate, lag(OrderDate), units = "days")) %>% 
+  arrange(desc(date_dif_days)) %>% 
+  head(1)
 ```
 
 28. ¿Cuál es el delta de tiempo más pequeño entre una orden y otra -en minutos o segundos-? Utiliza `lag` en tu respuesta y `datediff`
 ```{r, message=FALSE, warning=FALSE}
+dates %>%
+  arrange(OrderDate) %>% 
+  mutate(date_dif_seconds = difftime(OrderDate, lag(OrderDate), units = "secs")) %>%
+  arrange(date_dif_seconds) %>% 
+  head(1)
 ```
 
 29. ¿Cuál es el 7mo producto más vendido? Utiliza `rank` en tu respuesta
 ```{r, message=FALSE, warning=FALSE}
+orders_details_df <- tbl(db_connect('Northwind'), "Order Details") %>% collect()
+
+orders_details_df %>% 
+  group_by(ProductID) %>% 
+  summarise(n = n()) %>% 
+  mutate(rank = min_rank(desc(n))) %>% 
+  filter(rank == 7)
 ```
 
 30. ¿Cuál es el 5to producto más vendido por mes? Utiliza `rank` en tu respuesta
@@ -1465,4 +1605,15 @@ junio_13 <- flights %>%
 
 34. ¿En qué lugar de ventas se encuentra México? (ventas a enviar a México) Ocupa `rank` en tu respuesta
 ```{r, message=FALSE, warning=FALSE}
+
+orders <- orders_tbl %>% 
+  arrange('OrderDate') %>% 
+  collect()
+
+orders %>%
+  select(ShipCity) %>% 
+  group_by(ShipCity) %>% 
+  summarise(count = n()) %>%
+  mutate(rank = min_rank(desc(count))) %>% 
+  filter(ShipCity == 'Mxico D.F.')
 ```
