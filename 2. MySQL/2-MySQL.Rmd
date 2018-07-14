@@ -1231,5 +1231,63 @@ Es posible que debas utilizar el `size` o `colour` de los puntos para mostrar el
 ### Respuestas Todos -->
 
 ```{r, message=FALSE, warning=FALSE}
+# 18. ¿Qué pasó el 13 de junio de 2013?
+flights %>% 
+  filter(month == 6) %>% 
+  ggplot(aes(x=day, y=arr_delay+dep_delay)) +
+  geom_line()
+
+flights %>% 
+  filter(month == 6) %>%
+  group_by(day, flight) %>% 
+  summarise(n = n()) %>% 
+  ggplot(aes(x=day, y=n)) +
+  geom_line()
+
+# 31. ¿Cuáles son jefes? Revisa el atributo `reportsto` indica su nombre `firstname`, apellido `lastname`, departamento al que pertenece `title`, desde cuándo está en la compañía `hiredate` y cuántos empleados tiene a su cargo
+
+northwind <- db_connect('northwind')
+
+id_jefes <- tbl(northwind, 'Employees') %>% 
+  select(ReportsTo) %>% 
+  filter(ReportsTo != 'NA') %>% 
+  collect() %>% 
+  unique
+
+jefes <- tbl(northwind, 'Employees') %>% 
+  filter(EmployeeID %in% c(2,5)) %>% 
+  select(EmployeeID, FirstName, LastName, Title, HireDate) %>% 
+  collect
+
+# 32. Por cada "jefe" muestra el nombre `firstname` y apellido `lastname` del jefe seguido de un arreglo de id empleados `employeeid` de los empleados que tiene a su cargo.
+
+jefe1 <- tbl(northwind, 'Employees') %>%
+  filter(ReportsTo != 'NA') %>% 
+  select(EmployeeID, ReportsTo) %>% 
+  collect() %>% 
+  filter(ReportsTo == 2) %>% 
+  pull(EmployeeID) %>% 
+  unique %>% 
+  toString()
+
+jefe2 <- tbl(northwind, 'Employees') %>%
+  filter(ReportsTo != 'NA') %>% 
+  select(EmployeeID, ReportsTo) %>% 
+  collect() %>% 
+  filter(ReportsTo == 5) %>% 
+  pull(EmployeeID) %>% 
+  unique %>% 
+  toString()
+
+jefes_emp <- data.frame(EmployeeID = c(2,5), 
+                        Employees = c(jefe1,jefe2)) %>% 
+  inner_join(jefes) %>% 
+  select(FirstName, 
+         LastName, 
+         Employees)
+  
+  # group_by(ReportsTo) %>% 
+  # summarise(employees = as.list(unique(EmployeeID))) %>% 
+  # View
 
 ```
