@@ -1780,6 +1780,3 @@ Batting %>% filter(G > mean) %>% select(playerID, G)
 
 
 
-
-
-
