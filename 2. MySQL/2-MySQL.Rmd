@@ -19,9 +19,9 @@ output:
 
  ![](../images/divide-aplica-combina.png)
 
-`dplyr` añade muchas funciones para manipulación de datos a través de data frames, con un gran performance y backends para varias bases de datos. Nos permite manipular directamente tablas de una BD, sin escribir SQL, toda la evaluaci??n es lazy y, de ser posible, se realiza directamente en la BD.
+`dplyr` a??ade muchas funciones para manipulaci??n de datos a trav??s de data frames, con un gran performance y backends para varias bases de datos. Nos permite manipular directamente tablas de una BD, sin escribir SQL, toda la evaluaci??n es lazy y, de ser posible, se realiza directamente en la BD.
 
-Para estos ejemplos utilizaremos un data frame local (la tabla `mtcars` del paquete `dplyr`). Más adelante veremos cómo usar `dplyr` con bases de datos.
+Para estos ejemplos utilizaremos un data frame local (la tabla `mtcars` del paquete `dplyr`). M??s adelante veremos c??mo usar `dplyr` con bases de datos.
 
 ```{r, message=FALSE, warning=FALSE}
 library(dplyr)
@@ -30,7 +30,7 @@ mtc$car <- row.names(mtcars)
 head(mtc)
 ```
 
-También usaremos el siguiente data frame de "juguete" para tener más ejemplos:
+Tambi??n usaremos el siguiente data frame de "juguete" para tener m??s ejemplos:
 
 ```{r, message=FALSE, warning=FALSE}
 df_ej <- data.frame(genero = c("mujer", "hombre", "mujer", "mujer", "hombre"), 
@@ -62,7 +62,7 @@ select(df_ej, contains("g"))
 
 ### dplyr | filter
 
-La función *filter* permite filtrar un data frame por alguna condición que los renglones deban cumplir.
+La funci??n *filter* permite filtrar un data frame por alguna condici??n que los renglones deban cumplir.
 
 ![](../images/filter_data.png)
 
@@ -72,7 +72,7 @@ mtc %>% select(car, cyl, mpg) %>%
   head()
 ```
 
-Se puede hacer *filter* por más de una condición a la vez.
+Se puede hacer *filter* por m??s de una condici??n a la vez.
 
 Aprovechemos para ver `%in%`
 
@@ -107,7 +107,7 @@ xor(a, b)
 
 ### dplyr | arrange
 
-Ocupamos *arrange* para ordenar los datos de acuerdo a alguna(s) columna(s), por default se ordenan de manera ascendente por lo que debemos indicar que lo queremos de manera descendente cuando así lo querramos y por cuál columna vamos a ordenar.
+Ocupamos *arrange* para ordenar los datos de acuerdo a alguna(s) columna(s), por default se ordenan de manera ascendente por lo que debemos indicar que lo queremos de manera descendente cuando as?? lo querramos y por cu??l columna vamos a ordenar.
 
 ```{r, message=FALSE, warning=FALSE}
 mtc %>% select(car, cyl, mpg) %>%
@@ -123,7 +123,7 @@ arrange(df_ej, desc(estatura))
 
 ### dplyr | mutate
 
-La función *mutate* permite agregar una columna que no existía en el data frame original a partir de columnas que sí pertenecen al data frame original.
+La funci??n *mutate* permite agregar una columna que no exist??a en el data frame original a partir de columnas que s?? pertenecen al data frame original.
 
 ```{r, message=FALSE, warning=FALSE}
 mtc %>% select(car, cyl, mpg) %>%
@@ -140,7 +140,7 @@ mutate(df_ej, estatura_cm = estatura * 100, estatura_in = estatura_cm * 0.3937)
 
 ### dplyr | group by + summarise
 
-*group_by* agrupa un set de datos por alguna(s) columna(s), ocupamos *summarise* para aplicar alguna función a cada grupo de datos, count(\*) es un `n()` en dplyr, también se puede sacar `mean()`, `sd()`, `median()`, una función definida por nosotros, etc. Para unir todas las funciones ocupamos *magrittr* `%>%`.
+*group_by* agrupa un set de datos por alguna(s) columna(s), ocupamos *summarise* para aplicar alguna funci??n a cada grupo de datos, count(\*) es un `n()` en dplyr, tambi??n se puede sacar `mean()`, `sd()`, `median()`, una funci??n definida por nosotros, etc. Para unir todas las funciones ocupamos *magrittr* `%>%`.
 
 ```{r, message=FALSE, warning=FALSE}
 mtc %>% 
@@ -152,11 +152,11 @@ mtc %>%
   dplyr::summarise(mean.kpl = mean(kpl), n = n())
 ```
 
-La salida de `group by` regresa las cosas ordenadas alfabéticamente -por la columna con la que hizo agrupación-.
+La salida de `group by` regresa las cosas ordenadas alfab??ticamente -por la columna con la que hizo agrupaci??n-.
 
-Las operaciones que se realizan después de `group_by` se aplican a cada grupo por separado. e.g. `arrange` organiza las filas dentro de cada grupo por las columnas indicadas.
+Las operaciones que se realizan despu??s de `group_by` se aplican a cada grupo por separado. e.g. `arrange` organiza las filas dentro de cada grupo por las columnas indicadas.
 
-Summarise solo sirve para crear nuevas bases de datos con resúmenes o agregaciones de los datos originales.
+Summarise solo sirve para crear nuevas bases de datos con res??menes o agregaciones de los datos originales.
 
 ```{r, message=FALSE, warning=FALSE}
 dplyr::summarise(df_ej, promedio = mean(estatura))
@@ -169,13 +169,13 @@ by_genero <- group_by(df_ej, genero)
 by_genero
 ```
 
-y después operar sobre cada grupo, creando un resumen a nivel grupo y uniendo los subconjuntos en una base nueva:
+y despu??s operar sobre cada grupo, creando un resumen a nivel grupo y uniendo los subconjuntos en una base nueva:
   
 ```{r, message=FALSE, warning=FALSE}
 dplyr::summarise(by_genero, promedio = mean(estatura))
 ```
 
-Algunas funciones útiles con _summarise_ son `min(x)`, `median(x)`, `max(x)`, `quantile(x, p)`, `n()`, `sum(x)`, `sum(x > 1)`, `mean(x > 1)`, `sd(x)`.
+Algunas funciones ??tiles con _summarise_ son `min(x)`, `median(x)`, `max(x)`, `quantile(x, p)`, `n()`, `sum(x)`, `sum(x > 1)`, `mean(x > 1)`, `sd(x)`.
 
 
 <div style="background-color:#ffcf40">
@@ -238,7 +238,7 @@ anti |Incluye las filas de x que no coinciden con y
 
 ##### Ejercicios
 
-1. ¿Qué personajes son droides?
+1. ??Qu?? personajes son droides?
 
 2. Muestra el color de cabello, piel y ojos de los personajes femeninos
 
@@ -248,7 +248,7 @@ anti |Incluye las filas de x que no coinciden con y
 
 4. ??Cu??les son los 5 personajes m??s pesados?
 
-5. ¿Cuántos personajes de cada especie hay? ¿Cuál es el promedio de peso de cada especie? Muestra esta información de aquellas especies que tengan más de 1 personaje.
+5. ??Cu??ntos personajes de cada especie hay? ??Cu??l es el promedio de peso de cada especie? Muestra esta informaci??n de aquellas especies que tengan m??s de 1 personaje.
 
 ##### <-- Respuestas -->
 
@@ -1240,7 +1240,7 @@ library(tidyverse)
 library(nycflights13)
 ```
 
-1. Cuál es el aeropuerto con mayor tráfico de entrada? (vuelos diferentes) Ocupa en tu respuesta el nombre del aeropuerto (`join`)
+1. Cu??l es el aeropuerto con mayor tr??fico de entrada? (vuelos diferentes) Ocupa en tu respuesta el nombre del aeropuerto (`join`)
 
 ```{r}
 flights %>%
@@ -1261,7 +1261,7 @@ flights %>%
 
 ```
 
-3. Encuentra los vuelos en los que el retraso de llegada es más del doble que el retraso de salida.
+3. Encuentra los vuelos en los que el retraso de llegada es m??s del doble que el retraso de salida.
 
 ```{r}
 flights %>% 
@@ -1286,7 +1286,7 @@ flights %>% select(-c(year, month, day, dep_time, sched_dep_time, arr_time, sche
 )) %>% head()
 ```
 
-5. ¿Cuál es la aerolínea con mayor retraso de salida por día de la semana? `departure_delay`
+5. ??Cu??l es la aerol??nea con mayor retraso de salida por d??a de la semana? `departure_delay`
 
 ```{r}
 departure <- flights %>%
@@ -1303,10 +1303,10 @@ fbd <- flights %>%
 departure %>% left_join(fbd)
 ```
 
-6. ¿Qué aerolínea deberíamos tomar para tener la menor demora posible para llegar a Detroit? (ocupa `arrival_delay` como métrica, por qué ocupar esa variable?) 
+6. ??Qu?? aerol??nea deber??amos tomar para tener la menor demora posible para llegar a Detroit? (ocupa `arrival_delay` como m??trica, por qu?? ocupar esa variable?) 
 
 ```{r}
-# arrival_delay son los retrasos de llegada por lo que, la aerolinea que tenga menos retrasos de llegada es la que nos hará llegar a Detroit con menor diferencia entre el retraso y la llegada estimada del vuelo (la demora).
+# arrival_delay son los retrasos de llegada por lo que, la aerolinea que tenga menos retrasos de llegada es la que nos har?? llegar a Detroit con menor diferencia entre el retraso y la llegada estimada del vuelo (la demora).
 
 flights %>% 
   group_by(carrier) %>% 
@@ -1317,7 +1317,7 @@ flights %>%
 
 ```
 
-7. Calcula la velocidad en millas por hora a partir de la variable tiempo y la distancia (en millas). ¿Qué vuelo fue el más rápido?
+7. Calcula la velocidad en millas por hora a partir de la variable tiempo y la distancia (en millas). ??Qu?? vuelo fue el m??s r??pido?
 
 ```{r}
 flights %>% 
@@ -1326,9 +1326,9 @@ flights %>%
   arrange(desc(by = velocity))
 ```
 
-El vuelo más rapido es 1499
+El vuelo m??s rapido es 1499
 
-8. Crea una nueva variable que muestre cuánto tiempo se ganá o perdió durante el vuelo. ¿Qué vuelos _ganaron_ más tiempo en el aire?
+8. Crea una nueva variable que muestre cu??nto tiempo se gan?? o perdi?? durante el vuelo. ??Qu?? vuelos _ganaron_ m??s tiempo en el aire?
 
 ```{r}
 flights <- flights %>% mutate(loss_time = arr_delay+dep_delay)
@@ -1345,9 +1345,9 @@ flights%>%
   dplyr::summarise(loss_delay_mean = mean(loss_time, na.rm = TRUE))
 ```
 
-10. ¿Qué vuelos (compañía + vuelo) ocurren diario?
+10. ??Qu?? vuelos (compa????a + vuelo) ocurren diario?
 
-Primero notar que hay compañias que tienen más de un mismo vuelo en un mismo día
+Primero notar que hay compa??ias que tienen m??s de un mismo vuelo en un mismo d??a
 
 ```{r}
 flights %>% 
@@ -1360,19 +1360,19 @@ Por lo que se procede de la siguiente manera :
 
 ```{r}
 flights %>% 
-  left_join(airlines, by = "carrier") %>% #Solo para obtener el nombre de la compañía
+  left_join(airlines, by = "carrier") %>% #Solo para obtener el nombre de la compa????a
   mutate (company_flight = paste(name, as.character(flight), sep = "-")) %>% #Se agrega columna para identificar vuelo
   group_by(month,day, company_flight) %>% 
-  dplyr::summarise(n()) %>% #Solo para obtener los datos agrupados en mes, día y compañia (no importa el conteo)
-  group_by(day,company_flight) %>% #Con los anteriores datos se agrupa por día y ahora si importa el número de registros
-  dplyr::summarise(conteo = n()) %>% #Con esto se obtiene un conteo de cada número de día por año(por ejemplo, cuantos días con el número 1 existen (por obviedad, lo máximo es 12 )) 
-  group_by(company_flight) %>% #Se agrupa por compañía para ver cuantos días distintos existen 
+  dplyr::summarise(n()) %>% #Solo para obtener los datos agrupados en mes, d??a y compa??ia (no importa el conteo)
+  group_by(day,company_flight) %>% #Con los anteriores datos se agrupa por d??a y ahora si importa el n??mero de registros
+  dplyr::summarise(conteo = n()) %>% #Con esto se obtiene un conteo de cada n??mero de d??a por a??o(por ejemplo, cuantos d??as con el n??mero 1 existen (por obviedad, lo m??ximo es 12 )) 
+  group_by(company_flight) %>% #Se agrupa por compa????a para ver cuantos d??as distintos existen 
   dplyr::summarise(total_days = sum(conteo)) %>% 
   arrange(desc(total_days)) %>% 
-  filter(total_days>360) #Solo para obtener los vuelos que al menos 360 días en el año
+  filter(total_days>360) #Solo para obtener los vuelos que al menos 360 d??as en el a??o
 ```
 
-11. En promedio, ¿Cómo varían a lo largo del día los retrasos de vuelos no cancelados? (pista: hour + minute / 60)
+11. En promedio, ??C??mo var??an a lo largo del d??a los retrasos de vuelos no cancelados? (pista: hour + minute / 60)
 
 Los vuelos cancelados son aquellos que no tienen tiempo en el aire
 ```{r}
@@ -1384,7 +1384,7 @@ flights %>%
   
 ```
 
-12. ¿En qué día de la semana se tienen menor cantidad de retrasos de salida por aeropuerto?
+12. ??En qu?? d??a de la semana se tienen menor cantidad de retrasos de salida por aeropuerto?
 
 ```{r}
 flights %>%
@@ -1396,15 +1396,15 @@ flights %>%
   arrange(name)
 ```
 
-13. ¿Cuál es la 32va aerolínea con mayor diversidad de vuelos de entrada? Utiliza `rank`
+13. ??Cu??l es la 32va aerol??nea con mayor diversidad de vuelos de entrada? Utiliza `rank`
 
-Vease que solo existen 16 aerolíneas :
+Vease que solo existen 16 aerol??neas :
 
 ```{r}
 airlines %>% count()
 ```
 
-Por lo que se piensa que el ejercicio va dirigido no hacia las aerolíneas, si no a los aeropuertos (además, no tendría algún sentido un vuelo de entrada ya que la misma aerolínea esta involucrado en el despegue y aterrizaje )
+Por lo que se piensa que el ejercicio va dirigido no hacia las aerol??neas, si no a los aeropuertos (adem??s, no tendr??a alg??n sentido un vuelo de entrada ya que la misma aerol??nea esta involucrado en el despegue y aterrizaje )
 
 ```{r}
 # Vuelos de entrada : dest
@@ -1415,9 +1415,9 @@ flights %>%
   left_join(airports, c("dest" = "faa"))
 ```
 
-14. Explora si los aviones más viejos están asociados a mayores retrasos, responde con una gráfica.
+14. Explora si los aviones m??s viejos est??n asociados a mayores retrasos, responde con una gr??fica.
 
-Primero, con el promedio de retrasos por avión se tiene una medida de los retrasos.
+Primero, con el promedio de retrasos por avi??n se tiene una medida de los retrasos.
 
 ```{r}
 flights %>% 
@@ -1427,7 +1427,7 @@ flights %>%
   left_join(planes, by = 'tailnum')
 ```
 
-Como hay aviones de los cuales no se tiene información del año, se toman solo aquellos donde se tenga la anterior información
+Como hay aviones de los cuales no se tiene informaci??n del a??o, se toman solo aquellos donde se tenga la anterior informaci??n
 
 ```{r}
 library(plotly)
@@ -1444,9 +1444,9 @@ flights_grap_one <- flights %>%
 ggplotly(flights_grap_one)
 ```
 
-Como se ve en la anterior gráfica, existe una gran cantidad de aviones al rededor de los años 2000.
+Como se ve en la anterior gr??fica, existe una gran cantidad de aviones al rededor de los a??os 2000.
 
-Nuevamente se toma el promedio por obtener otra medida de los retrasos, ahora por año del avión.
+Nuevamente se toma el promedio por obtener otra medida de los retrasos, ahora por a??o del avi??n.
 
 ```{r}
 flights_grap_two <- flights %>% 
@@ -1458,15 +1458,15 @@ flights_grap_two <- flights %>%
   group_by(year) %>% dplyr::summarise(mean_of_delay = mean(mean_of_delay_plane, na.rm = TRUE)) %>% 
   ggplot(aes(x = year, y = mean_of_delay, fill = mean_of_delay))+ 
   geom_bar(stat = 'identity')+
-  ggtitle('Media de retrasos por año')
+  ggtitle('Media de retrasos por a??o')
   
 ggplotly(flights_grap_two)
   
 ```
 
-La cantidad de datos de los aviones menores a 1984 son menores comparados a los posteriores a este año, aún así, hay aviones del año 2003 que tiene una mayor cantidad de retrasos que los aviones del año 2000, en lado contrario, hay aviones del año 2007 que tienen un mayor número de retrasos que en el 2012, por lo que no hay alguna relación con el tiempo de retraso y la longevidad del avión.
+La cantidad de datos de los aviones menores a 1984 son menores comparados a los posteriores a este a??o as??, hay aviones del a??o 2003 que tiene una mayor cantidad de retrasos que los aviones del a??o 2000, en lado contrario, hay aviones del a??o 2007 que tienen un mayor n??mero de retrasos que en el 2012, por lo que no hay alguna relaci??n con el tiempo de retraso y la longevidad del avi??n.
 
-15. Calcula el retraso promedio por destino, luego une con la tabla `airports` para que puedas mostrar la distribución espacial de los retrasos. Aquí hay una manera fácil de dibujar un mapa de los Estados Unidos:
+15. Calcula el retraso promedio por destino, luego une con la tabla `airports` para que puedas mostrar la distribuci??n espacial de los retrasos. Aqu?? hay una manera f??cil de dibujar un mapa de los Estados Unidos:
 
 
 ```{r, message=FALSE, warning=FALSE, eval=FALSE, echo=TRUE}
@@ -1490,7 +1490,7 @@ map_one <- flights %>%
   borders("state", colour="black") +
   geom_point(aes(col=mean_delay),size=2) +
   coord_quickmap()+
-  ggtitle('distribución de retrasos promedio')
+  ggtitle('distribuci??n de retrasos promedio')
 
 ggplotly(map_one)
 ```
@@ -1508,12 +1508,12 @@ map_two <- flights %>%
   borders("state", colour="black") +
   geom_point(aes(col=mean_delay),size=3) +
   coord_quickmap()+
-  ggtitle('distribución de retrasos promedio')
+  ggtitle('distribuci??n de retrasos promedio')
 
 ggplotly(map_two)
 ```
 
-16. ¿Qué destinos tienen el promedio de retrasos más alto?
+16. ??Qu?? destinos tienen el promedio de retrasos m??s alto?
 
 ```{r}
 flights %>% 
@@ -1526,32 +1526,32 @@ flights %>%
   head()
 ```
 
-17. Agrega la ubicación del origen y el destino (es decir, `lat` y `lon`) a `flights`.
+17. Agrega la ubicaci??n del origen y el destino (es decir, `lat` y `lon`) a `flights`.
 
 ```{r}
 flights <- flights %>% 
   left_join(airports, c("origin" = "faa")) %>% 
   rename(lat_origin = lat, lon_origin = lon) %>% 
-  select(-c(name, alt, tz, dst, tzone)) %>% 
+  dplyr::select(-c(name, alt, tz, dst, tzone)) %>% 
   left_join(airports, c("dest" = "faa")) %>% 
   rename(lat_dest = lat, lon_dest = lon) %>% 
-  select(-c(name, alt, tz, dst, tzone))
+  dplyr::select(-c(name, alt, tz, dst, tzone))
 
 flights
 ```
 
-18. ¿Qué pasó el 13 de junio de 2013?
+18. ??Qu?? pas?? el 13 de junio de 2013?
 
 ```{r}
 flights %>% filter(year == 2013 & month == 6, day == 13) %>% View
 ```
 
-19. ¿Qué significa para un vuelo tener un `tailnum` faltante? ¿Qué tienen en común los números de cola que no tienen un registro coincidente en `planes`? (Sugerencia: una variable explica ~ 90% de los problemas).
+19. ??Qu?? significa para un vuelo tener un `tailnum` faltante? ??Qu?? tienen en com??n los n??meros de cola que no tienen un registro coincidente en `planes`? (Sugerencia: una variable explica ~ 90% de los problemas).
 
 ```{r}
 flights %>% filter(is.na(tailnum)) %>% head()
 ```
-Si no se tiene registro en el campo `tailnum` significa que no hubo un avión, es decir, no hubo vuelo.
+Si no se tiene registro en el campo `tailnum` significa que no hubo un avi??n, es decir, no hubo vuelo.
 
 Registros donde no hay coincidencia:
 
@@ -1560,10 +1560,10 @@ tail_but_no_plane <- flights %>% left_join(planes, by = "tailnum") %>% filter(!i
 tail_but_no_plane
 ```
 
-Ahora, la mayoría de los vuelos donde sucede lo anterior, la aerolinea encargada del vuelo es American Airways (AA) y Envoy Air (MQ) que en suma tienen más del 90% de estos vuelos.
+Ahora, la mayor??a de los vuelos donde sucede lo anterior, la aerolinea encargada del vuelo es American Airways (AA) y Envoy Air (MQ) que en suma tienen m??s del 90% de estos vuelos.
 
 
-Agregando a lo anterior, la documentación dice lo siguiente : American Airways (AA) y Envoy Air (MQ) informan los números de flota en lugar de los números de cola, por lo que pueden no coincidir.
+Agregando a lo anterior, la documentaci??n dice lo siguiente : American Airways (AA) y Envoy Air (MQ) informan los n??meros de flota en lugar de los n??meros de cola, por lo que pueden no coincidir.
 
 ```{r}
 tail_but_no_plane %>% 
@@ -1581,9 +1581,9 @@ flights %>%
   filter(count >= 100)
 ```
 
-21. Encuentra las 48 horas (en el transcurso del año) que tienen las peores demoras. Haz una referencia cruzada con los datos de `weather`. ¿Puedes ver algún patrón?
+21. Encuentra las 48 horas (en el transcurso del a??o) que tienen las peores demoras. Haz una referencia cruzada con los datos de `weather`. ??Puedes ver alg??n patr??n?
 
-Primero, se buscarán las 48 horas con mayor tiempo perdido
+Primero, se buscar??n las 48 horas con mayor tiempo perdido
 ```{r}
 flights %>% 
   group_by(year, month, day) %>% 
@@ -1602,7 +1602,7 @@ flights %>%
   head(1)
 ```
 
-Ya teniendo estas referencias, se toma este día y el día anterior (por la utilización de lag)
+Ya teniendo estas referencias, se toma este d??a y el d??a anterior (por la utilizaci??n de lag)
 
 ```{r message=FALSE, warning=FALSE}
 weather_flights <- flights %>% 
@@ -1613,17 +1613,17 @@ weather_flights <- flights %>%
   select(year, month, day, time_hour) %>%
   left_join(nycflights13::weather) %>% 
   group_by(day, hour, time_hour) %>% 
-  dplyr::summarise(temp_mean = mean(temp, na.rm = TRUE), wind_dir_mean = mean(wind_dir, na.rm = TRUE)) %>% # Ya que hay tres estaciones meteorológicas
+  dplyr::summarise(temp_mean = mean(temp, na.rm = TRUE), wind_dir_mean = mean(wind_dir, na.rm = TRUE)) %>% # Ya que hay tres estaciones meteorol??gicas
   mutate(celcius = (temp_mean-32)/1.8000)
 ```
 
-La temperatura se mantuvo en temperaturas bajas, no más de 5º celcius
+La temperatura se mantuvo en temperaturas bajas, no m??s de 5?? celcius
 
 ```{r}
 weather_flights %>% ggplot(aes(x =time_hour, y = celcius)) + geom_point()
 ```
 
-Y la dirección del viento (en grados), después de un tiempo cercano al inicio, se mantuvo en un rango
+Y la direcci??n del viento (en grados), despu??s de un tiempo cercano al inicio, se mantuvo en un rango
 
 ```{r}
 weather_flights %>% ggplot(aes(x = time_hour, y = wind_dir_mean)) + geom_line()
@@ -1649,7 +1649,7 @@ weather_flights_2 <- flights %>%
   select(year, month, day, time_hour) %>%
   left_join(nycflights13::weather) %>% 
   group_by(day, hour, time_hour) %>% 
-  dplyr::summarise(temp_mean = mean(temp, na.rm = TRUE)) %>% # Ya que hay tres estaciones meteorológicas
+  dplyr::summarise(temp_mean = mean(temp, na.rm = TRUE)) %>% # Ya que hay tres estaciones meteorol??gicas
   mutate(celcius = (temp_mean-32)/1.8000)
 ```
 
@@ -1658,9 +1658,9 @@ weather_flights_2 <- flights %>%
 weather_flights_2 %>% ggplot(aes(x =time_hour, y = celcius)) + geom_line()
 ```
 
-La temperatura se mantuvo en un rango de temperatura entre 23º y 31º centigrados
+La temperatura se mantuvo en un rango de temperatura entre 23?? y 31?? centigrados
 
-22. ¿Qué te dice `anti_join(flights, airports, by = c("dest" = "faa"))`? ¿Qué te dice `anti_join(airports, flights, by = c("faa" = "dest"))`?
+22. ??Qu?? te dice `anti_join(flights, airports, by = c("dest" = "faa"))`? ??Qu?? te dice `anti_join(airports, flights, by = c("faa" = "dest"))`?
 
 ```{r}
 anti_join(flights, airports, by = c("dest" = "faa"))
@@ -1670,9 +1670,9 @@ Los vuelos que tuvieron un destino diferente a cualquiera que estuviera en `airp
 ```{r}
 anti_join(airports, flights, by = c("faa" = "dest"))
 ```
-Los aeropuertos que no fueron considerados como destino de algún vuelo
+Los aeropuertos que no fueron considerados como destino de alg??n vuelo
 
-23. Es de esperar que exista una relación implícita entre el avión y la línea aérea, ya que cada avión es volado por una sola línea aérea. Confirma o rechaza esta hipótesis usando las herramientas que aprendimos.
+23. Es de esperar que exista una relaci??n impl??cita entre el avi??n y la l??nea a??rea, ya que cada avi??n es volado por una sola l??nea a??rea. Confirma o rechaza esta hip??tesis usando las herramientas que aprendimos.
 
 ```{r}
 flights %>% 
@@ -1682,9 +1682,9 @@ flights %>%
   dplyr::summarise(count = n()) %>% 
   filter(count > 1)
 ```
-Por lo cuál, es cierta la hipótesis.
+Por lo cu??l, es cierta la hip??tesis.
 
-24.¿Cuántas órdenes diferentes hay en tu dataset?
+24.??Cu??ntas ??rdenes diferentes hay en tu dataset?
 
 ```{r}
 library(pool)
@@ -1722,7 +1722,7 @@ orders_db %>%
   filter(n > 1)
 ```
 
-Como vemos, cada registro es único, por lo que basta con contar el número de registros
+Como vemos, cada registro es ??nico, por lo que basta con contar el n??mero de registros
 
 ```{r}
 orders_db %>% 
@@ -1734,7 +1734,7 @@ orders_db %>%
 
 Entonces hay 830 registros diferentes.
 
-25. ¿De qué fechas tenemos datos? (año, mes y día mínimo y máximo)?
+25. ??De qu?? fechas tenemos datos? (a??o, mes y d??a m??nimo y m??ximo)?
 ```{r message=FALSE, warning=FALSE}
 orders_arrange <- orders_db %>% arrange('OrderDate') %>% collect()
 ```
@@ -1751,16 +1751,16 @@ Hasta:
 orders_arrange$OrderDate %>% tail(1)
 ```
 
-26. ¿Con qué granularidad están los datos -por día-, es decir, tenemos datos diarios, solo entre semana? ¿Existen gaps en las fechas (días sin registro de órdenes)?
+26. ??Con qu?? granularidad est??n los datos -por d??a-, es decir, tenemos datos diarios, solo entre semana? ??Existen gaps en las fechas (d??as sin registro de ??rdenes)?
 
 ```{r}
 orders_arrange %>% 
   mutate(Order_delta = difftime(OrderDate, lag(OrderDate), units = c( "days"))) %>% 
   select(OrderDate, Order_delta)
 ```
-Se tienen datos cada 3, 1 o 0 días; como se tienen datos con diferencia de 3 días con el siguiente registro, los 2 registros faltantes (por los días) son las fechas faltantes
+Se tienen datos cada 3, 1 o 0 d??as; como se tienen datos con diferencia de 3 d??as con el siguiente registro, los 2 registros faltantes (por los d??as) son las fechas faltantes
 
-27. ¿Cuál es el delta de tiempo más grande entre una orden y otra -en días-? Utiliza `lag` en tu respuesta y `datediff` 
+27. ??Cu??l es el delta de tiempo m??s grande entre una orden y otra -en d??as-? Utiliza `lag` en tu respuesta y `datediff` 
 
 ```{r}
 orders_arrange %>% 
@@ -1769,9 +1769,9 @@ orders_arrange %>%
   filter(Order_delta > 3)
 ```
 
-El tiempo delta más grande es de 3.041667 días.
+El tiempo delta m??s grande es de 3.041667 d??as.
 
-28. ¿Cuál es el delta de tiempo más pequeño entre una orden y otra -en minutos o segundos-? Utiliza `lag` en tu respuesta y `datediff`
+28. ??Cu??l es el delta de tiempo m??s peque??o entre una orden y otra -en minutos o segundos-? Utiliza `lag` en tu respuesta y `datediff`
 
 ```{r}
 orders_arrange %>% 
@@ -1780,9 +1780,9 @@ orders_arrange %>%
   filter(Order_delta <= 1)
 ```
 
-El tiempo más pequeño es de 0.
+El tiempo m??s peque??o es de 0.
 
-29. ¿Cuál es el 7mo producto más vendido? Utiliza `rank` en tu respuesta
+29. ??Cu??l es el 7mo producto m??s vendido? Utiliza `rank` en tu respuesta
 
 ```{r message=FALSE, warning=FALSE}
 Ordern_details_db <- tbl(db_connect('Northwind'), "Order Details") %>% collect()
@@ -1797,7 +1797,7 @@ Ordern_details_db %>%
   filter(rank == 7)
 ```
 
-30. ¿Cuál es el 5to producto más vendido por mes? Utiliza `rank` en tu respuesta
+30. ??Cu??l es el 5to producto m??s vendido por mes? Utiliza `rank` en tu respuesta
 
 ```{r}
 orders_arrange %>% 
@@ -1810,7 +1810,7 @@ orders_arrange %>%
   
 ```
 
-31. ¿Cuáles son jefes? Revisa el atributo `reportsto` indica su nombre `firstname`, apellido `lastname`, departamento al que pertenece `title`, desde cuándo está en la compañía `hiredate` y cuántos empleados tiene a su cargo
+31. ??Cu??les son jefes? Revisa el atributo `reportsto` indica su nombre `firstname`, apellido `lastname`, departamento al que pertenece `title`, desde cu??ndo est?? en la compa????a `hiredate` y cu??ntos empleados tiene a su cargo
 
 ```{r}
 id_jefes <- tbl(db_connect('Northwind'), 'Employees') %>% 
@@ -1863,7 +1863,7 @@ Jefes_empleados <- data_frame(EmployeeID = c(2,5), Employees = c(jefe_1, jefe_2)
 Jefes_empleados
 ```
 
-33. ¿Cuál es el promedio de productos vendidos por orden y mes? 
+33. ??Cu??l es el promedio de productos vendidos por orden y mes? 
 
 ```{r}
 orders_arrange %>% 
@@ -1873,7 +1873,7 @@ orders_arrange %>%
   dplyr::summarise(mean = n())
 ```
 
-34. ¿En qué lugar de ventas se encuentra México? (ventas a enviar a México) Ocupa `rank` en tu respuesta
+34. ??En qu?? lugar de ventas se encuentra M??xico? (ventas a enviar a M??xico) Ocupa `rank` en tu respuesta
 
 ```{r}
 orders_arrange %>%
@@ -1884,7 +1884,7 @@ orders_arrange %>%
   select(ShipCity, rank)
 ```
 
-35. Para cada jugador de la tabla `Lahman::Batting`, busca todos aquellos que hayan jugado más juegos que el promedio
+35. Para cada jugador de la tabla `Lahman::Batting`, busca todos aquellos que hayan jugado m??s juegos que el promedio
 
 ```{r}
 library(Lahman)
