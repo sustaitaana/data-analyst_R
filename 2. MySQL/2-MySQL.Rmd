@@ -1611,6 +1611,11 @@ orders_dates <- orders_df %>%
 
 33. ¿Cuál es el promedio de productos vendidos por orden y mes? 
 ```{r, message=FALSE, warning=FALSE}
+promedio_productos_orden <- orders %>% 
+  left_join(orders_details_df, By = 'OrderID') %>% 
+  mutate(month_nbr = month(OrderDate)) %>% 
+  group_by(month_nbr, OrderID) %>% 
+  summarise(count = n())
 ```
 
 34. ¿En qué lugar de ventas se encuentra México? (ventas a enviar a México) Ocupa `rank` en tu respuesta
