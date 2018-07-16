@@ -1156,7 +1156,6 @@ mutate(players, career_year = yearID - min(yearID) + 1)
 maneras de seleccionar las variables de retraso (delay).
 
 5. ??Cu??l es la aerol??nea con mayor retraso de salida por d??a de la semana? `departure_delay`
-<<<<<<< HEAD
 
 6. ??Qu?? aerol??nea deber??amos tomar para tener la menor demora posible para llegar a Detroit? (ocupa `arrival_delay` como m??trica, por qu?? ocupar esa variable?) 
 
