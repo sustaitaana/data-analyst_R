@@ -1389,6 +1389,8 @@ flights %>%
 
 14. Explora si los aviones más viejos están asociados a mayores retrasos, responde con una gráfica.
 ```{r, message=FALSE, warning=FALSE}
+restraso_por_avion <- flights %>% 
+  select(tailnum, arr_delay, dep_delay)
 ```
 
 15. Calcula el retraso promedio por destino, luego une con la tabla `airports` para que puedas mostrar la distribución espacial de los retrasos. Aquí hay una manera fácil de dibujar un mapa de los Estados Unidos:
@@ -1558,7 +1560,17 @@ dates %>% tail(1)
 
 26. ¿Con qué granularidad están los datos -por día-, es decir, tenemos datos diarios, solo entre semana? ¿Existen gaps en las fechas (días sin registro de órdenes)?
 ```{r, message=FALSE, warning=FALSE}
+orders_df %>% 
+  select(OrderDate) %>% 
+  filter(!is.na(OrderDate)) %>% 
+  arrange(OrderDate) %>% 
+  mutate(dif_time = difftime(OrderDate, lag(OrderDate), units = "days")) %>% 
+  group_by(dif_time) %>% 
+  summarise(difference_days = n())
 ```
+
+Se aprecia que hay diferencia de días en específico:
+0, 1, 2.958, 3 y 3.04
 
 27. ¿Cuál es el delta de tiempo más grande entre una orden y otra -en días-? Utiliza `lag` en tu respuesta y `datediff` 
 ```{r, message=FALSE, warning=FALSE}
@@ -1603,7 +1615,17 @@ orders_dates <- orders_df %>%
 
 31. ¿Cuáles son jefes? Revisa el atributo `reportsto` indica su nombre `firstname`, apellido `lastname`, departamento al que pertenece `title`, desde cuándo está en la compañía `hiredate` y cuántos empleados tiene a su cargo
 ```{r, message=FALSE, warning=FALSE}
+employees_df <- tbl(db_connect('Northwind'), "Employees") %>% collect()
 ```
+
+```{r, message=FALSE, warning=FALSE}
+bosses_id <- employees_df %>% 
+  filter(!is.na(ReportsTo)) %>% 
+  group_by(ReportsTo) %>% 
+  summarise(Accountability=n()) %>% 
+  left_join(employees_df, c('ReportsTo' = 'EmployeeID'))
+```
+
 
 32. Por cada "jefe" muestra el nombre `firstname` y apellido `lastname` del jefe seguido de un arreglo de id empleados `employeeid` de los empleados que tiene a su cargo. Utiliza `array_agg` en tu respuesta
 ```{r, message=FALSE, warning=FALSE}
@@ -1611,11 +1633,23 @@ orders_dates <- orders_df %>%
 
 33. ¿Cuál es el promedio de productos vendidos por orden y mes? 
 ```{r, message=FALSE, warning=FALSE}
+promedio_productos_mes <- orders %>% 
+  left_join(orders_details_df, By = 'OrderID') %>% 
+  mutate(month_nbr = month(OrderDate)) %>% 
+  group_by(month_nbr, OrderID) %>% 
+  summarise(count = n()) %>% 
+  group_by(month_nbr) %>% 
+  summarise(mean_month = mean(count))
+```
+
+```{r, message=FALSE, warning=FALSE}
 promedio_productos_orden <- orders %>% 
   left_join(orders_details_df, By = 'OrderID') %>% 
   mutate(month_nbr = month(OrderDate)) %>% 
   group_by(month_nbr, OrderID) %>% 
-  summarise(count = n())
+  summarise(count = n()) %>% 
+  group_by(OrderID) %>% 
+  summarise(mean_order = mean(count))
 ```
 
 34. ¿En qué lugar de ventas se encuentra México? (ventas a enviar a México) Ocupa `rank` en tu respuesta
