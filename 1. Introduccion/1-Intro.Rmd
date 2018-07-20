@@ -753,33 +753,228 @@ DELETE FROM greenshark
    WHERE Author="unknown";
 ``` 
 
-<!-- ### MySQL -->
+## API
 
-<!-- #### Ambiente de ejecución -->
+### Referencia
+
+Cuando hablamos de API (interfaces de programación de aplicaciones), gran parte de la conversación se centra en conceptos abstractos. Comencemos con algo que es físico: el servidor. Un servidor no es más que una gran computadora. Tiene todas las partes que las computadoras portátiles o de escritorio que utilizamos normalmente pero es más rápido y más potente. Típicamente, los servidores no tienen un monitor, teclado o mouse, lo que los hace parecer inaccesibles. La realidad es que podemos acceder a ellos de manera remota.
+
+Los servidores se utilizan para todo tipo de cosas. Algunos almacenan datos, otros envían correos electrónicos. El tipo de servidores con los que las personas interactúan más son los servidores web. Estos son los que nos brindan una página web cuando visitamos cualquier sitio web.
+
+Realmente no hay nada mágico o espectacular al respecto. Un desarrollador de software escribe un programa, lo copia en un servidor y el servidor ejecuta el programa continuamente.
+
+#### ¿Qué es una API y por qué es valiosa?
+
+Los sitios web están diseñados para atender las fortalezas de las personas. Los seres humanos tenemos una capacidad increíble para tomar información visual, combinarla con nuestras experiencias para derivar significado, y luego actuar en consecuencia. Es por eso que podemos ver un formulario en un sitio web y saber que la pequeña casilla con la frase **"Nombre"** arriba significa que debemos escribir la palabra que usamos para identificarnos.
+
+Sin embargo, ¿qué sucede cuando nos enfrentamos a una tarea que exige mucho tiempo, como copiar la información de contacto de miles de clientes de un sitio a otro? Nos encantaría delegar este trabajo a una computadora para que se pueda hacer de forma rápida y precisa. Desafortunadamente, las características que hacen que los sitios web sean óptimos para los humanos dificultan que las computadoras los usen.
+
+La solución es una API. Una API es la herramienta que hace que los datos de un sitio web sean digeribles para una computadora. A través de esta, una computadora puede ver y editar datos, al igual que una persona puede cargar páginas y enviar formularios.
+
+![](../images/api-intro.png)
+
+Facilitar el trabajo con los datos es bueno porque significa que las personas pueden escribir software para automatizar tareas tediosas y que requieren mucha mano de obra. Lo que podría llevar horas humanas lograr puede tomar un segundo de computadora a través de una API.
+
+#### ¿Cómo se usa una API?
+
+Cuando dos sistemas (sitios web, computadoras de escritorio, teléfonos inteligentes) se conectan a través de una API, decimos que están "integrados". En una integración, tenemos dos lados, cada uno con un nombre especial. Un lado del que ya hemos hablado: el **servidor**. Este es el lado que realmente proporciona la API. Es útil recordar que la API es simplemente otro programa que se ejecuta en el servidor. Puede ser parte del mismo programa que maneja el tráfico web, o puede ser completamente independiente. En cualquier caso, está ahí esperando que otros le pidan datos.
+
+El otro lado es el **cliente**. Este es un programa separado que sabe qué datos están disponibles a través de la API y puede manipularlos, generalmente a petición de un usuario. Un gran ejemplo es una aplicación de teléfono inteligente que se sincroniza con un sitio web. Cuando presionamos el botón de actualización en la aplicación, esta habla con un servidor a través de una API y obtiene la información más reciente.
+
+El mismo principio se aplica a los sitios web que están integrados. Cuando un sitio extrae datos de otro, el sitio que proporciona los datos actúa como el servidor y el sitio que obtiene los datos es el cliente.
+
+### Conocer las reglas
+
+Las personas crean etiquetas sociales para guiar sus interacciones. Un ejemplo es cómo nos hablamos por teléfono. Imagínate a ti mismo hablando con un amigo: mientras él habla, sabes que debes callar. Si te hace una pregunta y luego se queda callado, sabes que está esperando una respuesta y es tu turno de hablar.
+
+Las computadoras tienen una etiqueta similar, aunque se usa el término **protocolo**. Un protocolo de computadora es un conjunto aceptado de reglas que gobierna cómo dos computadoras pueden comunicarse entre sí. Comparado con nuestros estándares, un protocolo de computadora es extremadamente rígido. Pensemos en las siguientes oraciones:
+
++ *"Mi color favorito es azul"*
+
++ *"El azul es mi color favorito"*
+
+Las personas podemos desglosar cada oración y ver que significan lo mismo a pesar de que las palabras están en diferentes órdenes. Desafortunadamente, las computadoras no son tan inteligentes.
+
+Para que dos computadoras se comuniquen efectivamente, el servidor debe saber exactamente cómo el cliente organizará sus mensajes. Podemos pensar que es como una persona que solicita una dirección. Cuando solicita la ubicación de un lugar, asume que lo primero que le dicen es la dirección, seguido de la ciudad, el estado y, por último, el código postal. También tiene ciertas expectativas sobre cada parte de la dirección, como el hecho de que el código postal solo debe contener números. Se requiere un nivel de especificidad similar para que funcione un protocolo de computadora.
+
+### El protocolo de la web
+
+Existe un protocolo para casi todo, cada uno diseñado para diferentes trabajos. Conocemos algunos: *Bluetooth* para conectar dispositivos y *POP* o *IMAP* para buscar correos electrónicos.
+
+En la web, el protocolo principal es el *Protocolo de Transferencia de Hiper-Texto*, más conocido por sus siglas, **HTTP**. Cuando escribimos una dirección como `http://ejemplo.com` en un navegador web, el "http" le dice al navegador que use las reglas de HTTP cuando hable con el servidor.
+
+Con la omnipresencia de HTTP en la web, muchas empresas optan por adoptarlo como el protocolo subyacente a sus API.
+
+#### Solicitudes HTTP
+
+La comunicación en HTTP se centra en un concepto llamado ciclo de *solicitud - respuesta*. El cliente envía una solicitud al servidor para hacer algo. El servidor, a su vez, envía al cliente una respuesta que dice si el servidor puede o no hacer lo que el cliente solicitó.
+
+![](../images/http-requests.png)
+
+Para hacer una solicitud válida, el cliente debe incluir cuatro cosas:
+
++ **URL** (Localizador Uniforme de Recursos)
++ **Método**
++ Lista de **encabezados**
++ **Cuerpo**
+
+Esto puede parecer a que se necesitan muchos detalles solo para transmitir un mensaje, pero debemos recordar que las computadoras son muy específicas para comunicarse entre sí.
+
+##### URL
+
+Las URL nos son familiares a través de nuestro uso diario de la web, pero ¿alguna vez te haz tomado un momento para considerar su estructura? En HTTP, una URL es una dirección única para una cosa (un sustantivo). Qué cosas están ligadas a esta depende completamente del negocio que ejecuta el servidor. Pueden crear URLs para páginas web, imágenes o incluso videos de animales lindos.
+
+Las API amplían esta idea un poco más para incluir sustantivos como compradores, productos y tweets. Al hacerlo, las URL se convierten en una manera fácil para que el cliente le diga al servidor con qué cosa desea interactuar. Por supuesto, las API no las llaman "cosas", les dan el nombre técnico de "recursos".
+
+##### Método
+
+El método de solicitud le dice al servidor qué tipo de acción quiere el cliente que haga el servidor. De hecho, el método se conoce comúnmente como la solicitud **verbo**.
+
+Los cuatro métodos más comúnmente vistos en las API son:
+
++ **GET**: Pide al servidor que recupere un recurso
++ **POST**: Pide al servidor que cree un nuevo recurso
++ **PUT**: Pide al servidor que edite/actualice un recurso existente
++ **DELETE**: Pide al servidor que elimine un recurso
+
+Aquí hay un ejemplo para ayudar a ilustrar estos métodos. 
+
+![](../images/pizza.png)
+
+Digamos que hay una pizzería con una API que podemos usar para hacer pedidos. Realizamos un pedido haciendo una solicitud **POST** al servidor del restaurante con los detalles de nuestro pedido, pidiéndoles que creen nuestra pizza. No obstante, tan pronto como envíamos la solicitud, nos damos cuenta de que elegimos el estilo de masa incorrecta, por lo que hacemos una solicitud **PUT** para cambiarla.
+
+Mientras esperamos el pedido, hacemos un montón de solicitudes **GET** para verificar el estado. Después de una hora de espera, decidimos que ya esperamos demasiado y hacemos una solicitud **DELETE** para cancelar el pedido.
+
+##### Encabezados
+
+Los encabezados proporcionan meta-información sobre una solicitud. Son una lista simple de elementos, como el momento en que el cliente envió la solicitud y el tamaño del cuerpo de la solicitud.
+
+Seguro has visitado un sitio web en tu teléfono inteligente que fue especialmente formateado para dispositivos móviles. Eso es posible gracias a un encabezado HTTP llamado **User-Agent**. El cliente usa este encabezado para indicarle al servidor qué tipo de dispositivo estás utilizando y los sitios web lo suficientemente inteligentes como para detectarlo pueden enviarte el mejor formato para tu dispositivo.
 
 
-<!-- ## API REST -->
+##### Cuerpo
 
-<!-- ### Protocolo HTTP -->
+El cuerpo de la solicitud contiene los datos que el cliente desea enviar al servidor. Continuando con nuestro ejemplo de pedido de pizza arriba, el cuerpo es donde van los detalles de la orden.
+
+Un rasgo único sobre el cuerpo es que el cliente tiene control total sobre esta parte de la solicitud. A diferencia del método, URL o encabezados, donde el protocolo HTTP requiere una estructura rígida, el cuerpo permite que el cliente envíe todo lo que necesita.
+
+Estas cuatro piezas (URL, método, encabezados y cuerpo) constituyen una solicitud HTTP completa.
+
+![](../images/http-request.png)
+
+#### Respuestas HTTP
+
+Después de que el servidor recibe una solicitud del cliente, intenta cumplir con la solicitud y enviar una respuesta a este. Las respuestas HTTP tienen una estructura muy similar a las solicitudes. La principal diferencia es que en lugar de un método y una URL, la respuesta incluye un código de estado. Más allá de eso, los encabezados de respuesta y el cuerpo siguen en el mismo formato que las solicitudes.
+
+##### Códigos de estado
+
+Los códigos de estado son números de tres dígitos que tienen un significado único. Cuando se usa correctamente en una API, este pequeño número puede comunicar mucha información al cliente. Por ejemplo, seguro has visto esta página durante tus búsquedas en Internet:
+
+![](../images/404.png)
+
+El código de estado detrás de esta respuesta es 404, que significa **"No encontrado"**. Cada vez que el cliente realiza una solicitud de un recurso que no existe, el servidor responde con un código de estado 404 para informar al cliente: *"ese recurso no existe, así que no vuelva a solicitarlo"*.
+
+Hay una gran cantidad de otros estados en el protocolo HTTP, incluyendo 200 (*"¡éxito! Esa solicitud fue buena"*) o 503 (*"nuestro sitio web/API está actualmente inactivo"*).
+
+Después de que se entrega una respuesta al cliente, se completa el ciclo solicitud-respuesta y termina la ronda de comunicación. Ahora le corresponde al cliente iniciar cualquier interacción adicional. El servidor no enviará al cliente más datos hasta que reciba una nueva solicitud.
+
+![](../images/http-response.png)
+
+#### ¿Cómo se construyen las API en HTTP?
+
+Hemos visto que HTTP admite una amplia gama de permutaciones para ayudar al cliente y al servidor a hablar. Entonces, ¿cómo nos ayuda esto con las API? 
+La flexibilidad de HTTP significa que las API basadas en él pueden proporcionar a los clientes un gran potencial comercial. Vimos ese potencial en el ejemplo de pedido de pizza anterior. Un simple ajuste al método de solicitud fue la diferencia entre decirle al servidor que creara un nuevo pedido o cancelara uno existente. Fue fácil convertir el resultado empresarial deseado en una instrucción que el servidor podría entender. ¡Súper poderoso!
+
+Esta versatilidad en el protocolo HTTP se extiende a otras partes de una solicitud, también. Algunas API requieren un encabezado particular, mientras que otras requieren información específica dentro del cuerpo de la solicitud. Poder usar las API depende de saber cómo hacer la solicitud HTTP correcta para obtener el resultado que deseamos.
+
+### Representando datos
+
+Al compartir datos con personas, las posibilidades de cómo mostrar la información están limitadas solo por la imaginación humana. Recordemos el ejemplo de la pizzería: ¿cómo podrían formatear su menú? Podría ser una lista con solo texto y viñetas, podría ser una serie de fotos con subtítulos o incluso podrían ser solo fotos, que los clientes extranjeros podrían señalar para hacer su pedido.
+
+Un formato bien diseñado está dictado por lo que hace que la información sea más fácil de entender para el público objetivo.
+
+El mismo principio se aplica al compartir datos entre computadoras. Una computadora tiene que poner los datos en un formato que la otra entenderá. En general, esto significa algún tipo de formato de texto. Los formatos más comunes que se encuentran en las API modernas son **JSON** (JavaScript Object Notation) y **XML** (Extensible Markup Language).
+
+#### JSON
+
+Muchas nuevas API han adoptado JSON como formato porque está basado en el popular lenguaje de programación **JavaScript**, que es omnipresente en la web y utilizable tanto en la parte frontal como en la parte posterior de una aplicación o servicio web. 
+
+JSON es un formato muy simple que consta de dos piezas: **llaves** y **valores**. Las llaves representan un atributo sobre el objeto que se describe. Una orden de pizza puede ser un objeto. Tiene atributos (llaves), como el tipo de masa, coberturas y el estado del pedido. Estos atributos tienen los valores correspondientes (masa gruesa, pepperoni y en proceso de entrega).
+
+Veamos cómo podría verse este pedido de pizza en JSON:
+
+```{r, eval=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+{
+    "masa": "original",
+    "ingredientes": ["queso", "pepperoni", "ajo"],
+    "estado": "cocinar"
+}
+```
 
 
-<!-- ### JSON -->
+En el ejemplo anterior de JSON, las llaves son las palabras de la izquierda: **ingredientes**, **masa** y **estado**. Nos dicen qué atributos contiene el pedido de pizza. Los valores son las partes de la derecha; estos son los detalles reales de la orden.
+
+![](../images/json.png)
+
+Si leemos una línea de izquierda a derecha, obtenemos una oración bastante natural. Tomando la primera línea como ejemplo, podríamos leerlo como *"la masa de esta pizza es de estilo original"*. La segunda línea también se puede leer - en JSON, un valor que comienza y termina con corchetes (`[]`) es una lista de valores. Entonces, leemos la segunda línea del pedido como *"los ingredientes para esta orden son: queso, pepperoni y ajo"*.
+
+A veces, podemos querer utilizar un objeto como el valor de una llave. Extendamos nuestro pedido de pizzas con los detalles del cliente para que veamos esto:
 
 
-<!-- ### Endpoints y recuperación de información -->
+```{r, eval=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+{
+  "masa": "original",
+  "ingredientes": ["queso", "pepperoni", "ajo"],
+  "estado": "cocinando",
+  "cliente": {
+    "nombre": "Brian",
+    "teléfono": "573-111-1111"
+  }
+}
+```
 
 
-<!-- ### Parsing de información -->
+En esta versión actualizada, vemos que se agrega una nueva llave, **cliente**. El valor de esta llave es otro conjunto de llaves y valores que proporcionan detalles sobre el cliente que realizó el pedido. Esto se conoce como **matriz asociativa**: es solo un objeto anidado.
+
+#### XML
+
+Al igual que JSON, **XML** proporciona algunos bloques de construcción simples que quienes hacen API utilizan para estructurar sus datos. El bloque principal se llama **nodo**.
+
+Veamos cómo se vería nuestro pedido de pizza en XML:
+
+```{r, eval=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+<orden> 
+    <masa>original</masa> 
+    <ingredientes> 
+        <ingrediente>queso</ingrediente> 
+        <ingrediente>pepperoni</ingrediente> 
+        <ingrediente>ajo</ingrediente> 
+    </ingredientes> 
+    <estado>cocinando</estado> 
+</orden>
+```
 
 
-<!-- ### Conexión y sesiones -->
+XML siempre comienza con un nodo raíz, que en nuestro ejemplo de pizza es **orden**. Dentro de orden hay más nodos *secundarios*. El nombre de cada nodo nos dice el atributo del pedido (como la llave en JSON) y los datos en el interior son los detalles reales (como el valor en JSON).
+
+![](../images/xml.png)
+
+También podemos inferir oraciones leyendo XML. Al mirar la línea con "masa", podemos leer: *"la masa para la pizza es de estilo original"*. Notemos que en XML, cada elemento en la lista de ingredientes está envuelto por un nodo.
+
+### ¿Cómo se usan los formatos de datos en HTTP?
+
+Ahora que hemos explorado algunos formatos de datos disponibles, necesitamos saber cómo usarlos en HTTP. Para hacerlo, volveremos a uno de los fundamentos de HTTP: **encabezados**. Ya aprendimos que los encabezados son una lista de información sobre una solicitud o respuesta. Hay un encabezado para decir en qué formato están los datos: **Content-Type**.
+
+Cuando el cliente envía el encabezado **Content-Type** en una solicitud, le dice al servidor que los datos en el cuerpo de la solicitud están formateados de una manera particular. Si el cliente desea enviar los datos JSON del servidor, configurará *Content-Type* como `"application/json"`. Al recibir la solicitud y ver ese tipo de contenido, el servidor primero comprobará si entiende ese formato y, de ser así, sabrá cómo leer los datos. Asimismo, cuando el servidor envía una respuesta al cliente, también configura el tipo de contenido para indicar al cliente cómo leer el cuerpo de la respuesta.
+
+A veces, el cliente solo puede hablar un formato de datos. Si el servidor devuelve algo que no sea ese formato, el cliente fallará y arrojará un error. Afortunadamente, un segundo encabezado HTTP lo rescate. El cliente puede configurar el encabezado **Accept** para indicarle al servidor qué formatos de datos puede aceptar. Si el cliente solo puede hablar JSON, puede configurar el encabezado *Accept* en `"application/json"`. El servidor devolverá su respuesta en JSON. Si el servidor no admite el formato que el cliente solicita, puede enviar un error al cliente para informarle que la solicitud no va a funcionar.
+
+Con estos dos encabezados, *Content-Type* y *Accept*, el cliente y el servidor pueden trabajar con los formatos de datos que entienden y necesitan para funcionar correctamente.
+
+![](../images/data-formats.png)
 
 
-<!-- ### Tipos de API REST -->
+### Ejemplos de API
 
-
-<!-- ### INEGI -->
-
-
-<!-- ### Twitter -->
-
++ [Twitter](https://developer.twitter.com/content/developer-twitter/en.html)
++ [INEGI](http://www.beta.inegi.org.mx/servicios/api_biinegi.html)

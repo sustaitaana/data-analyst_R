@@ -1448,7 +1448,6 @@ Registros donde no hay coincidencia
 flights %>% 
   left_join(nycflights13::planes, by = "tailnum") %>% 
   filter(!is.na(tailnum) & is.na(type))
-
 ```
 
 20. Filtra vuelos para mostrar solo aquellos aviones que hayan volado al menos 100 vuelos.
@@ -1639,9 +1638,36 @@ employees_df %>%
 ```
 
 
-32. Por cada "jefe" muestra el nombre `firstname` y apellido `lastname` del jefe seguido de un arreglo de id empleados `employeeid` de los empleados que tiene a su cargo. Utiliza `array_agg` en tu respuesta
-```{r, message=FALSE, warning=FALSE}
-```
+32. Por cada "jefe" muestra el nombre `firstname` y apellido `lastname` del jefe seguido de un arreglo de id empleados `employeeid` de los empleados que tiene a su cargo.
+
+jefe1 <- tbl(northwind, 'Employees') %>%
+  filter(ReportsTo != 'NA') %>% 
+  select(EmployeeID, ReportsTo) %>% 
+  collect() %>% 
+  filter(ReportsTo == 2) %>% 
+  pull(EmployeeID) %>% 
+  unique %>% 
+  toString()
+
+jefe2 <- tbl(northwind, 'Employees') %>%
+  filter(ReportsTo != 'NA') %>% 
+  select(EmployeeID, ReportsTo) %>% 
+  collect() %>% 
+  filter(ReportsTo == 5) %>% 
+  pull(EmployeeID) %>% 
+  unique %>% 
+  toString()
+
+jefes_emp <- data.frame(EmployeeID = c(2,5), 
+                        Employees = c(jefe1,jefe2)) %>% 
+  inner_join(jefes) %>% 
+  select(FirstName, 
+         LastName, 
+         Employees)
+  
+  # group_by(ReportsTo) %>% 
+  # summarise(employees = as.list(unique(EmployeeID))) %>% 
+  # View
 
 33. ¿Cuál es el promedio de productos vendidos por orden y mes? 
 promedio_productos_mes
