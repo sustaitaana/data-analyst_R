@@ -1235,40 +1235,49 @@ Cargar data frames
 ```{r, message=FALSE, warning=FALSE}
 install.packages("tidyverse")
 install.packages("nycflights13")
+install.packages("ggplot2")
+install.packages("maps")
 library(dplyr)
 ```
 1. ¿Cuál es el aeropuerto con mayor tráfico de entrada? (vuelos diferentes) Ocupa en tu respuesta el nombre del aeropuerto (`join`)
 ```{r, message=FALSE, warning=FALSE}
-aux_flilght <- flights %>% 
+flights %>% 
   select(dest, flight) %>%
   group_by(dest, flight) %>%
   summarise(n = n())
 ```
 
 ```{r, message=FALSE, warning=FALSE}
-aux_flilght2 <- aux_flilght %>% 
+aux_flilght %>% 
   count(dest) %>% 
   arrange(desc(nn))
 ```
 
 ```{r, message=FALSE, warning=FALSE}
-aiport_dest <- aux_flilght2 %>%
-  inner_join(airports, c("dest" = "faa"))
+aux_flilght2 %>%
+  inner_join(nycflights13::airports, c("dest" = "faa"))
 ```
 
 2. Encuentra los vuelos con un retraso mayor a una hora.
+arr_delays_more_than_1hour
 ```{r, message=FALSE, warning=FALSE}
-arr_delays_more_than_1hour <- flights %>% 
+flights %>% 
   filter(arr_delay > 60) %>% 
   mutate(delay = arr_delay/60) %>% 
   arrange(desc(delay))
+```
 
-dep_delays_more_than_1hour <- flights %>% 
+dep_delays_more_than_1hour
+```{r, message=FALSE, warning=FALSE}
+ flights %>% 
   filter(dep_delay > 60) %>% 
   mutate(delay = dep_delay/60) %>% 
   arrange(desc(delay))
+```
 
-delays_more_than_1hour <- flights %>% 
+delays_more_than_1hour
+```{r, message=FALSE, warning=FALSE}
+ flights %>% 
   filter(arr_delay > 0 | dep_delay > 0) %>% 
   mutate(delay = arr_delay + dep_delay) %>% 
   filter(delay > 60) %>% 
@@ -1278,7 +1287,7 @@ delays_more_than_1hour <- flights %>%
 
 3. Encuentra los vuelos en los que el retraso de llegada es más del doble que el retraso de salida.
 ```{r, message=FALSE, warning=FALSE}
-flighst_3 <- flights %>% 
+flights %>% 
   filter(arr_delay > 0, arr_delay > 0) %>% 
   filter(arr_delay > 2*dep_delay) %>% 
   arrange(desc(arr_delay))
@@ -1286,6 +1295,7 @@ flighst_3 <- flights %>%
 
 4. Ve la ayuda de select (`?select`) y escribe tres
 maneras de seleccionar las variables de retraso (delay).
+Creo que se resolvía de otra manera*
 ```{r, message=FALSE, warning=FALSE}
 is_more_than_1hour <- function(delay) delay>60
 retrasos <- flights %>% 
@@ -1298,18 +1308,18 @@ retrasos <- flights %>%
 
 5. ¿Cuál es la aerolínea con mayor retraso de salida por día de la semana? `departure_delay`
 ```{r, message=FALSE, warning=FALSE}
-mayor_delay_por_dia <- flights %>% 
+flights %>% 
   select(dep_delay, carrier, day) %>% 
   filter(dep_delay>0) %>% 
   group_by(day, carrier) %>% 
   summarise(max_delay = max(dep_delay)) %>% 
   filter(max_delay==max(max_delay)) %>% 
-  left_join(airlines, c("carrier" = "carrier"))
+  left_join(nycflights13::airlines, c("carrier" = "carrier"))
 ```
 
 6. ¿Qué aerolínea deberíamos tomar para tener la menor demora posible para llegar a Detroit? (ocupa `arrival_delay` como métrica, por qué ocupar esa variable?)
 ```{r, message=FALSE, warning=FALSE}
-aerolinea_6 <- flights %>% 
+flights %>% 
   select(carrier, arr_delay, dest) %>% 
   filter(dest == "DTW") %>% 
   arrange(arr_delay) %>% 
@@ -1319,7 +1329,7 @@ aerolinea_6 <- flights %>%
 7. Calcula la velocidad en millas por hora a partir de
 la variable tiempo y la distancia (en millas). ¿Qué vuelo fue el más rápido?
 ```{r, message=FALSE, warning=FALSE}
-velocidad <- flights %>% 
+flights %>% 
   select(flight, air_time, distance) %>% 
   mutate(speed = distance/(air_time/60)) %>% 
   arrange(desc(speed)) %>% 
@@ -1331,7 +1341,7 @@ max(velocidad$speed, na.rm = TRUE)
 
 8. Crea una nueva variable que muestre cuánto tiempo se ganó o perdió durante el vuelo. ¿Qué vuelos _ganaron_ más tiempo en el aire?
 ```{r, message=FALSE, warning=FALSE}
-tiempo_ganado <- flights %>%
+flights %>%
   select(flight, origin, dest, arr_delay, dep_delay) %>% 
   mutate(tiempo_extra = arr_delay-dep_delay) %>% 
   arrange(desc(tiempo_extra))
@@ -1339,7 +1349,7 @@ tiempo_ganado <- flights %>%
 9. Calcula el retraso de llegada
  promedio por fecha.
 ```{r, message=FALSE, warning=FALSE}
-retraso_fecha <- flights %>% 
+flights %>% 
   filter(arr_delay > 0) %>% 
   mutate(dates = paste(year, "-", month, "-", day)) %>% 
   select(arr_delay, dates) %>% 
@@ -1365,7 +1375,7 @@ flights %>%
 ```{r, message=FALSE, warning=FALSE}
 flights %>%
   filter(dep_delay > 0) %>%
-  left_join(airlines, by = "carrier") %>% 
+  left_join(nycflights13::airlines, by = "carrier") %>% 
   mutate(day_of_week = weekdays(time_hour)) %>% 
   group_by(day_of_week, name) %>% 
   summarise(number_dep_delay = n()) %>% 
@@ -1376,7 +1386,7 @@ flights %>%
 
 13. ¿Cuál es la 32va aerolínea con mayor diversidad de vuelos de entrada? Utiliza `rank`
 ```{r, message=FALSE, warning=FALSE}
-airlines %>% count()
+nycflights13::airlines %>% count()
 ```
 Sólo hay 16 aerolíneas, entonces el número de aeropuertos o carrieras tendría más sentido si se quisiera conocer un rank así, por lo que escogemos aeropuertos
 ```{r, message=FALSE, warning=FALSE}
@@ -1389,15 +1399,14 @@ flights %>%
 
 14. Explora si los aviones más viejos están asociados a mayores retrasos, responde con una gráfica.
 ```{r, message=FALSE, warning=FALSE}
-restraso_por_avion <- flights %>% 
+flights %>% 
   select(tailnum, arr_delay, dep_delay)
 ```
 
 15. Calcula el retraso promedio por destino, luego une con la tabla `airports` para que puedas mostrar la distribución espacial de los retrasos. Aquí hay una manera fácil de dibujar un mapa de los Estados Unidos:
 
-
 ```{r, message=FALSE, warning=FALSE, eval=FALSE, echo=TRUE}
-airports %>%
+nycflights13::airports %>%
   semi_join(flights, c("faa" = "dest")) %>%
   ggplot(aes(lon, lat)) +
     borders("state") +
@@ -1413,7 +1422,7 @@ Es posible que debas utilizar el `size` o `colour` de los puntos para mostrar el
 
 17. Agrega la ubicación del origen y el destino (es decir, `lat` y `lon`) a `flights`.
 ```{r, message=FALSE, warning=FALSE}
-flights17 <- flights %>% 
+flights %>% 
   left_join(nycflights13::airports, c("origin" = "faa")) %>% 
   rename(lat_origin = lat, lon_origin = lon) %>% 
   select(-c(name, alt, tz, dst, tzone)) %>% 
@@ -1421,12 +1430,11 @@ flights17 <- flights %>%
   rename(lat_dest = lat, lon_dest = lon) %>% 
   select(-c(name, alt, tz, dst, tzone))
 
-flights17
 ```
 
 18. ¿Qué pasó el 13 de junio de 2013?
 ```{r}
-junio_13 <- flights %>% 
+flights %>% 
   filter(year == 2013, month == 6, day == 13)
 ```
 19. ¿Qué significa para un vuelo tener un `tailnum` faltante? ¿Qué tienen en común los números de cola que no tienen un registro coincidente en `planes`? (Sugerencia: una variable explica ~ 90% de los problemas).
@@ -1437,11 +1445,10 @@ flights %>% filter(is.na(tailnum)) %>% head()
 
 Registros donde no hay coincidencia
 ```{r, message=FALSE, warning=FALSE}
-tail_but_no_plane <- flights %>% 
-  left_join(planes, by = "tailnum") %>% 
+flights %>% 
+  left_join(nycflights13::planes, by = "tailnum") %>% 
   filter(!is.na(tailnum) & is.na(type))
 
-tail_but_no_plane
 ```
 
 20. Filtra vuelos para mostrar solo aquellos aviones que hayan volado al menos 100 vuelos.
@@ -1455,7 +1462,7 @@ flights %>%
 
 21. Encuentra las 48 horas (en el transcurso del año) que tienen las peores demoras. Haz una referencia cruzada con los datos de `weather`. ¿Puedes ver algún patrón?
 ```{r, message=FALSE, warning=FALSE}
-flights_48_hours <- flights %>% 
+flights %>% 
   select(flight, year, month, day, origin, dest, arr_delay, dep_delay) %>%
   group_by(year, month, day) %>% 
   summarise(mean_arr_delay = mean(arr_delay, na.rm = TRUE), mean_dep_delay = mean(dep_delay, na.rm = TRUE)) %>% 
@@ -1467,13 +1474,14 @@ flights_48_hours <- flights %>%
   left_join(nycflights13::weather)
 ```
 
+Solución de Carlos.
 ```{r}
 flights %>%
   filter(arr_delay > 0) %>%
-  group_by(time_hour) %>% dplyr::summarise(sum = sum(arr_delay, na.rm = TRUE)) %>% 
+  group_by(time_hour) %>% summarise(sum = sum(arr_delay, na.rm = TRUE)) %>% 
   arrange(desc(sum)) %>% 
   head(48) %>% 
-  left_join(weather, by = "time_hour") %>% #Por cada hora, se tienen tres registros en weather, uno por cada estación climatológica, por lo que se hace un promedio entre los tres valores resultantes.
+  left_join(nycflights13::weather, by = "time_hour") %>%
   group_by(time_hour) %>% dplyr::summarise(mean_temp = mean(temp, na.rm = TRUE), mean_wind_dir = mean(wind_dir, na.rm = TRUE), mean_wind_speed = mean(wind_speed, na.rm = TRUE))
   
 ```
@@ -1603,6 +1611,10 @@ orders_details_df %>%
 
 30. ¿Cuál es el 5to producto más vendido por mes? Utiliza `rank` en tu respuesta
 ```{r, message=FALSE, warning=FALSE}
+library("lubridate")
+```
+
+```{r, message=FALSE, warning=FALSE}
 orders_dates <- orders_df %>% 
   left_join(orders_details_df, By = 'OrderID') %>%
   mutate(month_order = month(OrderDate)) %>% 
@@ -1619,7 +1631,7 @@ employees_df <- tbl(db_connect('Northwind'), "Employees") %>% collect()
 ```
 
 ```{r, message=FALSE, warning=FALSE}
-bosses_id <- employees_df %>% 
+employees_df %>% 
   filter(!is.na(ReportsTo)) %>% 
   group_by(ReportsTo) %>% 
   summarise(Accountability=n()) %>% 
@@ -1632,8 +1644,9 @@ bosses_id <- employees_df %>%
 ```
 
 33. ¿Cuál es el promedio de productos vendidos por orden y mes? 
+promedio_productos_mes
 ```{r, message=FALSE, warning=FALSE}
-promedio_productos_mes <- orders %>% 
+orders %>% 
   left_join(orders_details_df, By = 'OrderID') %>% 
   mutate(month_nbr = month(OrderDate)) %>% 
   group_by(month_nbr, OrderID) %>% 
@@ -1642,8 +1655,9 @@ promedio_productos_mes <- orders %>%
   summarise(mean_month = mean(count))
 ```
 
+promedio_productos_orden
 ```{r, message=FALSE, warning=FALSE}
-promedio_productos_orden <- orders %>% 
+ orders %>% 
   left_join(orders_details_df, By = 'OrderID') %>% 
   mutate(month_nbr = month(OrderDate)) %>% 
   group_by(month_nbr, OrderID) %>% 
@@ -1665,4 +1679,14 @@ orders %>%
   summarise(count = n()) %>%
   mutate(rank = min_rank(desc(count))) %>% 
   filter(ShipCity == 'Mxico D.F.')
+```
+35. Para cada jugador de la tabla Lahman::Batting, busca todos aquellos que hayan jugado más juegos que el promedio
+```{r, message=FALSE, warning=FALSE}
+library(Lahman)
+
+promedio <- mean(Batting$G)
+
+Batting %>% 
+  select(playerID, G) %>% 
+  filter(G > promedio)
 ```
