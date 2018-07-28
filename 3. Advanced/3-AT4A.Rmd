@@ -1570,20 +1570,63 @@ x4b - x4
 ### stringr
 
 1. A menudo verás `paste()` y `paste0()`. ¿Cuál es la diferencia entre las dos funciones? ¿A qué función de `stringr` son equivalentes? ¿Cómo difieren las funciones en su manejo de `NA`?
+paste0() Según la documentación es un poco más eficiente que paste()
+También el argumento sep en paste() es " " y en paste0() es "", es decir paste() introduce un espacio por default.
+Es equivalente a "str_c()"
 
 2. En tus propias palabras, describe la diferencia entre los argumentos `sep` y `collapse` de `str_c()`.
+sep* inserta un caracter entre cada palabra concatenada, en cada concatenación
+collapse* inserta una cadena después de cada iteración de concatenación, por ejemplo si tenemos varios vectores.
 
 3. Usa `str_length()` y `str_sub()` para extraer el caracter medio de una cadena. ¿Qué harás si la cadena tiene un número par de caracteres?
+```{r}
+de_enmedio <- function(cadena){
+  longitud <- str_length(cadena)
+  str_c("longitud de cadena: ", longitud)
+  mitad <- longitud/2
+  str_c("Letra de en medio: ",str_sub(cadena, mitad, mitad))
+}
+cadenita <- "cadena para separar"
+
+de_enmedio(cadenita)
+
+```
+
 
 4. ¿Qué hace `str_wrap()`? ¿Cuándo podrías querer usarlo?
 
 5. ¿Qué hace `str_trim()`? ¿Qué es lo opuesto a `str_trim()`?
 
 6. Escribe una función que convierta (por ejemplo) un vector `c("a", "b", "c")` en la cadena `a, b y c`. Piensa con cuidado sobre lo que debería hacer esta función si recibe un vector de longitud 0, 1 o 2.
+```{r}
+
+concatenador <- function(arreglo){
+  longitud <- length(arreglo)
+  final <-  ""
+  if(longitud>0){
+    final <- arreglo[1]
+    print(final)
+    for (i in 1:(longitud-1)) {
+      final<-str_c(final, ", ")
+      print(final)
+    }
+    final <- str_replace(final, ", $", " y ")
+    print(final)
+    final <- str_c(final, arreglo[longitud])
+    print(final)
+  }
+  
+  print(final)
+}
+
+arreglo <- c("a")
+concatenador(arreglo)
+```
 
 7. Explica por qué cada una de estas cadenas no coinciden con un `\`: `"\"`, `"\\"`, `"\\\"`.
 
 8. ¿Cómo coincidirías la secuencia `"'\`?
+`\"\'\\`
 
 9. ¿Qué patrones encontrará la expresión regular `\..\..\..`? ¿Cómo lo representarías como una cadena?
 
@@ -1601,17 +1644,33 @@ Dado que esta lista es larga, es posible que desees utilizar el argumento `match
 12. Crea expresiones regulares para encontrar todas las palabras que:
 
     + Comienzan con una vocal.
+    /\b[aeiou]\w*/
+    R. Se empieza por un delimitador boundary \b y luego la opción de que empiece la expresión con una letra del abecedario [aeiou] y al final que se termine la palabra con w*
     + Solo contienen consonantes. (Sugerencia: piensa en encontrar "no" -vocales).
+    \b[^aeiou]*\b
     + Terminan con `ed`, pero no con `eed`.
+    ([^e]ed)\w*|(^ed)
     + Terminan con `ing` o `ise`.
+    (ing)\b|(ise)\b
 
 13. Crea una expresión regular que coincida con los números de teléfono escritos comúnmente en tu país.
+\b[0123456789]{10}\b
+Con lada
+```{r, message=FALSE, warning=FALSE}
+str_view("teléfono con lada: 5551211350, otro teléfono 123123", "\\b[0123456789]{10}\\b")
+```
 
 14. Describe los equivalentes de `?`, `+`, `*` en la forma `{m,n}`.
+? = {0,1}
++ = {0,inf)
+* = {1, inf)
 
 15. Crea expresiones regulares para encontrar todas las palabras que:
 
     + Comienzan con tres consonantes.
+    ```{r}
+    str_view("MMMOLA IMAGINE LLLAOM LL0M", "\\b[^AEIOU]{3}")
+    ```
     + Tienen tres o más vocales seguidas.
     + Tienen dos o más parejas de vocales y consonantes seguidas.
     + Resuelve los crucigramas de la expresión regular para principiantes en [https://regexcrossword.com/challenges/beginner](https://regexcrossword.com/challenges/beginner).
@@ -1679,8 +1738,10 @@ Dado que esta lista es larga, es posible que desees utilizar el argumento `match
 ```{r, message=FALSE, warning=FALSE, eval=FALSE, include=TRUE}
 ymd(c("2010-10-10", "bananas"))
 ```
+Sales NA, porque no pudo hacer el parsing
 
 2. ¿Qué hace el argumento `tzone` para `today()`? ¿Por qué es importante?
+R. Para obtener la hora específica en un cierto lugar del globo
 
 3. Use la función de `lubridate` apropiada para parsear cada una de las siguientes fechas:
 
@@ -1699,6 +1760,7 @@ d5 <- "12/30/14" # 30 Dic, 2014
 6. Compara `air_time` con la duración entre la partida y la llegada. Explica tus hallazgos (Sugerencia: considera la ubicación del aeropuerto).
 
 7. ¿Cómo cambia el tiempo promedio de demora en el transcurso de un día? ¿Deberías usar `dep_time` o `sched_dep_time`? ¿Por qué?
+Se debería usar dept_time, porque fue el tiempo real al cual se fue, no el planeado.
 
 8. ¿En qué día de la semana deberías irte si quieres minimizar la posibilidad de un retraso?
 
@@ -1711,5 +1773,23 @@ d5 <- "12/30/14" # 30 Dic, 2014
 12. Crea un vector de fechas para el primer día de cada mes en 2015. Crea un vector de fechas que indique el primer día de cada mes en el año actual.
 
 13. Escribe una función que, dada tu fecha de cumpleaños (como fecha), devuelva la edad que tienes en años.
+```{r, message=FALSE, warning=FALSE}
+
+miEdad <- function(dateIn){
+  todayDate <- today()
+  diffYears <- year(todayDate) - year(dateIn)
+  if(month(todayDate) >= month(dateIn)){
+    if(day(dateIn) < day(todayDate)){
+      print(str_c("Tienes: ", diffYears-1, " años"))
+    }
+    else{
+      print(str_c("Tienes: ", diffYears, " años"))
+    }
+  }
+  else{
+    print(str_c("Tienes: ", diffYears-1, " años"))
+  }
+}
+```
 
 14. ¿Por qué no funciona `(today() %--% (today() + years(1)) / months(1)`?
