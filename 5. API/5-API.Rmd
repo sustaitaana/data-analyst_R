@@ -532,7 +532,7 @@ filings[1:10, c("organization.sub_name", "organization.city", "totrevenue")]
 
 ### New York Times
 
-The New York Times tiene varias API como parte de la red de desarrolladores de NYT. Estas interfaces con datos de varios departamentos, como artículos de noticias, reseñas de libros, bienes raíces, etc. Se requiere registro (pero gratis) y se puede obtener una clave aquí . El código a continuación incluye algunas claves de ejemplo para fines ilustrativos.
+The New York Times tiene varias API como parte de la red de desarrolladores de NYT. Estas interfaces con datos de varios departamentos, como artículos de noticias, reseñas de libros, bienes raíces, etc. Se requiere registro (pero gratis) y se puede obtener una clave [aquí](http://developer.nytimes.com/signup). El código a continuación incluye algunas claves de ejemplo para fines ilustrativos.
 
 ```{r, message=FALSE, warning=FALSE}
 # articulos
