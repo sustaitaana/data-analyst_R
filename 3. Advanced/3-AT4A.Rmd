@@ -1631,13 +1631,22 @@ concatenador(arreglo)
 9. ¿Qué patrones encontrará la expresión regular `\..\..\..`? ¿Cómo lo representarías como una cadena?
 
 10. ¿Cómo coincidirías con la cadena literal `"$^$"`?
-
+```{r}
+cadena <- 'this is "$^$" hola'
+str_view_all(cadena, ('\\"\\$\\^\\$\\"'))
+```
 11. Dado el corpus de palabras en `stringr::words`, crea expresiones regulares que encuentren todas las palabras que:
 
     + Comienzan con "y".
     + Terminan con "x"
     + Tienen exactamente tres letras de largo. (¡No hagas trampa al usar str_length()!)
     + Tener siete letras o más.
+    
+    ```{r}
+    wordsi <- stringr::words
+    palabras <- str_extract(words, "^y", simplify=TRUE)
+    head(palabras)
+    ```
     
 Dado que esta lista es larga, es posible que desees utilizar el argumento `match` de `str_view()` para mostrar solo las palabras coincidentes o no coincidentes.
 
@@ -1669,7 +1678,7 @@ str_view("teléfono con lada: 5551211350, otro teléfono 123123", "\\b[012345678
 
     + Comienzan con tres consonantes.
     ```{r}
-    str_view("MMMOLA IMAGINE LLLAOM LL0M", "\\b[^AEIOU]{3}")
+    str_view_all("MMMOLA IMAGINE LLLAOM LL0M lkmh ghj kjasdn76", "(\\b[^AEIOUaeiou\\s]{3})")
     ```
     + Tienen tres o más vocales seguidas.
     + Tienen dos o más parejas de vocales y consonantes seguidas.
