@@ -1,0 +1,530 @@
+---
+title: "Final Proyect Data Analyst R"
+author: "Carlos Fernando Vásquez Guerra"
+output:
+  html_document:
+    df_print: paged
+    highlight: pygments #espresso
+    theme: cosmo
+---
+# {.tabset .tabset-fade .tabset-pills}
+
+## Data Profiling
+
+###Contexto
+El siguiente proyecto tiene como finalidad hacer un análisis exploratorio sobre los datos históricos de los meses de enero hasta julio del año 2018 proporcionados por la página de [ecobici](https://www.ecobici.cdmx.gob.mx/es/informacion-del-servicio/open-data); en la misma liga se puede econtrar lo necesario para accesar al API proporcionado por este servicio. La documentación sobre la API se encuentra en la siguiente [liga](https://www.ecobici.cdmx.gob.mx/sites/default/files/pdf/manual_api_opendata_esp_final.pdf)
+
+`Ecobici` es un servicio de bicicletas públicas de la Ciudad de México dirigido a los habitantes de la capital, de sus alrededores y a los turistas.
+
+El funcionamiento de este servicio permite a los usuarios registrados tomar una bicicleta de cualquier cicloestación y devolverla en la más cercana a su destino en trayectos ilimitados de 45 minutos.
+
+La forma para acceder a este servicio es mediante un suscripción anual, semanal, de cada tres días o diaria
+
+Este servicio está disponible en un horario de 5:00 hrs hasta 00:30 hrs todos los días del año, el cuál inicio en el año 2010, febrero con 84 `cicloestaciones` y mil 200 bicicletas.
+
+Actualmente `Ecobici` cuenta con más de 170 mil usuarios registrados y el servicio está disponible en 55 colonias de la Ciudad de México, en un área de 38 kilómetros cuadrados.
+
+El API de `ecobici`se enfoca en datos actuales y el objetivo es sobre los datos históricos, para su obtención no es necesario utilizar la API.
+
+Los datos fueron descargados y almacenados en una BD llamada `ECOBICI`; el dump para exportar esta BD se encuentra en los archivos suministrados en este proyecto en la carpeta `data`
+
+La BD `ECOBICI` contiene 7 tablas, una por cada mes, es decir, una por cada archivo descargado directamente de la página de ecobici; cada tabla contiene los siguientes campos: 
+
++ **gender_user**: Genero del usuario que utilizó el servicio ecobici.
++ **year_user**: Edad del usuario que utilizó el servicio ecobici.
++ **id_bici**: Identificador de la bicicleta utilizada.
++ **re_station**: Identificador de la estación donde se retiró la bicicleta.
++ **re_date**: Fecha de retiro de la bicicleta de la última estación registada para su utilzación.
++ **re_time**: Hora de retiro de la bicicleta de la última estación registrada para su utilización.
++ **arr_station**: Identificador de la estación donde se deposita la bicicleta.
++ **arr_station**: Fecha de llegada de la bicicleta a la estación de arrivo.
++ **arr_time**: Hora de llegada de la bicicleta a la estación de arrivo.
+
+Se procederá a la conexión y extracción de datos desde la BD
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(lubridate)
+library(pool)
+library(DBI)
+library(RMySQL)
+library(knitr)
+library(ggmap)
+library(plotly)
+
+db.host <- 'localhost'
+db.user <- 'root'
+db.port <- 3306
+db.password <- '5up3rm4n'
+
+## DB Connection
+db_connect <- function(db.name) {
+  db <- dbPool(
+    drv = RMySQL::MySQL(),
+    dbname = db.name,
+    host = db.host,
+    user = db.user,
+    password = db.password,
+    port = as.numeric(db.port)
+  )
+  
+  return(db)
+}
+```
+
+Nos interesa hacer un análisis sobre todos los datos por lo que, para evitar seleccionar todo por partes de cada tabla, se extraeran todos los datos de cada tabla.
+
+```{r}
+January <- tbl(db_connect('ECOBICI'), "Enero") %>% collect()
+February <- tbl(db_connect('ECOBICI'), "Febrero") %>% collect()
+March <- tbl(db_connect('ECOBICI'), "Marzo") %>% collect()
+April <- tbl(db_connect('ECOBICI'), "Abril") %>% collect()
+May <- tbl(db_connect('ECOBICI'), "Mayo") %>% collect()
+June <- tbl(db_connect('ECOBICI'), "Junio") %>% collect()
+July <- tbl(db_connect('ECOBICI'), "Julio") %>% collect()
+```
+
+Ahora, un poco de limpieza
+
+```{r}
+January
+```
+
+Con la siguiente función se modificará el tipo de dato en `gender_user` y se colapsará los datos de tiempo y fecha en un sólo dato para los tiempos de arrivo y los tiempos de retiro registrados
+
+```{r}
+gender_arr_fix <- function(data){
+  new_data <- data %>% mutate(gender_user = factor(gender_user, levels = c("M", "F")), 
+                              arr_time = str_replace(arr_time, "(\\w+:\\w+:\\w+)\\r", "\\1"),
+                              re_date = dmy(re_date), re_time = hms(re_time), 
+                              arr_date = dmy(arr_date), arr_time = hms(arr_time)) %>% 
+    mutate(re_datetime = make_datetime(year(re_date),
+                                       month(re_date), 
+                                       day(re_date),
+                                       hour(re_time), 
+                                       minute(re_time),
+                                       second(re_time)), 
+           arr_datetime = make_datetime(year(arr_date),
+                                       month(arr_date), 
+                                       day(arr_date),
+                                       hour(arr_time), 
+                                       minute(arr_time),
+                                       second(arr_time))) %>% 
+    select(-c(re_date, re_time, arr_date, arr_time))
+  return(new_data)
+}
+```
+
+```{r}
+January <- gender_arr_fix(January)
+February <- gender_arr_fix(February)
+March <- gender_arr_fix(March)
+April <- gender_arr_fix(April)
+May <- gender_arr_fix(May)
+June <- gender_arr_fix(June)
+July <- gender_arr_fix(July)
+```
+
+```{r}
+April
+```
+
+Para realizar un perfilamiento de datos se hace uso del módulo `DataProfiling el cual se encuentra en los documentos de este proyecto
+
+```{r}
+source("DataProfiling.R")
+```
+
+Ahora, se hará el data profiling por cada mes
+
+Hay que observar que `year_user`, `id_bici`, `re_station`, `arr_station` son identificadores, por lo que, aunque sean de tipo numérico, no proporcionan alguna información cuantitativa relevante, por lo que solo se observarán características sobre los datos que no incluya resumenes numericos.
+
+Primero un conteo de datos, después un resumen sobre cada mes.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+conteos <- tibble(Month = c("January", "February", "March", "April", "May", "June", "July"), 
+       Count = c(686292	, 694195	, 737225, 756432, 798074, 690121, 718607))
+conteos
+```
+
++ Enero
+```{r}
+J_fac <- January %>% select(-c(re_datetime, arr_datetime))
+J_date <- January %>% select(c(re_datetime, arr_datetime))
+```
+```{r}
+J_factor <- J_fac %>% profiling("categorical")
+kable(J_factor, format.args = list(big.mark=",", scientific=F))
+```
+
+En el mes de enero, la mayoría de los usuarios son de género masculino, la mayoría de los usuarios tienen 28 años, se tiene una preferencia sobre la bicicleta con id 7376,además de un preferencia en la estación 271 para retirar bicicletas y depositarlas en la estación 1
+
+Para los datos de tiempo sólo se verifica si existen valores nulos y el conteo de los valores únicos.
+
+```{r}
+J_datetime <- J_date %>% profiling("other")
+kable(J_datetime, format.args = list(big.mark=",", scientific=F))
+```
+
++ Febrero
+```{r}
+F_fac <- February %>% select(-c(re_datetime, arr_datetime))
+F_date <- February %>% select(c(re_datetime, arr_datetime))
+
+F_factor <- F_fac %>% profiling("categorical")
+kable(F_factor, format.args = list(big.mark=",", scientific=F))
+```
+
+```{r}
+F_datetime <- F_date %>% profiling("other")
+kable(F_datetime, format.args = list(big.mark=",", scientific=F))
+
+```
+
+En el caso del mes de febrero, se mantienen el genero y la edad de los usuarios, en este caso se tiene una preferencia sobre la bicicleta con id 2019 , la estación 271 para retirar bicicletas y depositarlas en la estación 43.
+
++ Marzo
+```{r}
+M_fac <- March %>% select(-c(re_datetime, arr_datetime))
+M_date <- March %>% select(c(re_datetime, arr_datetime))
+
+M_factor <- M_fac %>% profiling("categorical")
+kable(M_factor, format.args = list(big.mark=",", scientific=F))
+```
+
+```{r}
+M_datetime <- M_date %>% profiling("other")
+kable(M_datetime, format.args = list(big.mark=",", scientific=F))
+
+```
+
+Para el mes de marzo, se sigue conservando la tendencia sobre la edad y genero de los usuarios, en este mes se tiene una preferencia sobre la bicicleta con id 2698, sigue una preferencia en la estación 271 para retirar bicicletas y la estación para depositarlas en este mes con mayor preferencia es la estación 27
+
++ Abril
+```{r}
+A_fac <- April %>% select(-c(re_datetime, arr_datetime))
+A_date <- April %>% select(c(re_datetime, arr_datetime))
+
+A_factor <- A_fac %>% profiling("categorical")
+kable(A_factor, format.args = list(big.mark=",", scientific=F))
+```
+
+```{r}
+
+A_datetime <- A_date %>% profiling("other")
+kable(A_datetime, format.args = list(big.mark=",", scientific=F))
+
+```
+
+En el mes de abril, sigue la tendencia sobre la edad y genero de los usuarios; ahora la bicicleta de preferencia es aquella con id 11065 y la estación preferida en este es para retirar y depositar la bicicleta es la número 27.
+
++ Mayo
+```{r}
+May_fac <- May %>% select(-c(re_datetime, arr_datetime))
+May_date <- May %>% select(c(re_datetime, arr_datetime))
+
+May_factor <- May_fac %>% profiling("categorical")
+kable(May_factor, format.args = list(big.mark=",", scientific=F))
+```
+
+```{r}
+May_datetime <- May_date %>% profiling("other")
+kable(May_datetime, format.args = list(big.mark=",", scientific=F))
+
+```
+
+En el mes de mayo, se conservan las anteriores tendencias en la edad y genero de los usuarios; la bicicleta de preferencia es aquella con id 15259 y finalmente, hay preferencia en la estación 271 para retirar bicicletas, con sucedio en el mes de enero y la preferencia para depositarlas en la estación 27 tal como sucedio en el mes de marzo.
+
++ Junio
+```{r}
+Jun_fac <- June %>% select(-c(re_datetime, arr_datetime))
+Jun_date <- June %>% select(c(re_datetime, arr_datetime))
+
+Jun_factor <- Jun_fac %>% profiling("categorical")
+kable(Jun_factor, format.args = list(big.mark=",", scientific=F))
+```
+
+```{r}
+
+Jun_datetime <- Jun_date %>% profiling("other")
+kable(Jun_datetime, format.args = list(big.mark=",", scientific=F))
+
+```
+
+En el mes de junio, sigue la tendencia de genero y edad sobre los usuarios, ahora hay preferencia sobre la bicicleta con id 2789, y al igual de mayo, hay preferencia en la estación 271 para retirar bicicletas, con sucedio en el mes de enero y la preferencia para depositarlas en la estación 27
+
++ Julio
+```{r}
+July_fac <- July %>% select(-c(re_datetime, arr_datetime))
+July_date <- July %>% select(c(re_datetime, arr_datetime))
+
+July_factor <- July_fac %>% profiling("categorical")
+kable(July_factor, format.args = list(big.mark=",", scientific=F))
+```
+
+```{r}
+
+July_datetime <- July_date %>% profiling("other")
+kable(July_datetime, format.args = list(big.mark=",", scientific=F))
+
+```
+
+Finalmente para el mes de julio, se conservo la tendencia de edad y genero como en todos los meses, el id de la bicicleta de preferencia en este mes es 9581 y al igual que el mes de abril la estación preferida para retirar y depositar la bicicleta es la número 27.
+
+Vease que la estación número 271 es la que tiene un mayor número de registros donde los usuarios obtuvieron bicicletas en los meses de : 
+
++ Enero, Febrero, Marzo, Mayo y Junio.
+
+Por otro lado, la estación 27 en los meses de Abril y Julio es donde se obtienen la mayor cantidad de registros donde los usuarios obtuvieron una bicicleta. Esta estación es tienen la mayoría donde los usuarios depositan una bicicleta en los meses de : 
+
++ Marzo, Abril, Mayo, Junio y Julio.
+
+Ahora, surgen varias preguntas o issues sobre los datos.
+
+##EDA
+
+¿Dónde se ubican las estaciones más recurrentes? Es decir, las estaciones con el id 27 y 271.
+
+Un mapa de todas las `cicloestaciones` se encuentra en la página oficial de ecobici, aunque en esta [liga](https://www.ecobici.cdmx.gob.mx/sites/default/files/pdf/mapa_web_opt_0.pdf) se encuentra el archivo correspondiente.
+
+La ubicación de cada una de las 480 estaciones se encuentra en la siguiente [página](https://www.ecobici.cdmx.gob.mx/es/mapa-de-cicloestaciones#anclamapa)
+
+Las anteriores estaciones son las siguientes: 
+
++ 27 REFORMA-HAVRE 
+
+```{r message=FALSE, warning=FALSE}
+first_station <- geocode('Paseo de la Reforma, Juárez, 06600 Ciudad de México, Ciudad de México, México', 
+                  source = "google")
+map_first_station <- get_map(location = as.numeric(first_station),
+                      color = "color",
+                      maptype = "roadmap",
+                      scale = 2,
+                      zoom = 16)
+ggmap(map_first_station) + geom_point(aes(x = lon, y = lat),
+                               data = first_station , colour = 'red',
+                               shape = 23, size = 4, fill= "orange")
+```
+
++ 271 AV. CENTRAL-J. MENESES
+
+```{r message=FALSE}
+second_station <- geocode('Jesús García 271, Buenavista, 06350 Ciudad de México, CDMX, México', 
+                  source = "google")
+
+map_second_station <- get_map(location = as.numeric(first_station),
+                      color = "color",
+                      maptype = "roadmap",
+                      scale = 1,
+                      zoom = 14)
+
+ggmap(map_second_station) + geom_point(aes(x = lon, y = lat),
+                               data = second_station , colour = 'red',
+                               shape = 23, size = 4, fill= "orange")
+```
+
+Ambas estaciones están ubicadas en zonas donde hay una gran cantidad de personas y movilidad.
+
+Recordar que en el mes de Junio se tienen a estas dos como más recurrentes por lo que un vistazo sobre la ruta sería excelente.
+
+```{r message=FALSE, warning=FALSE}
+Mapa_CDMX <- get_map("Londres 6, Juárez, 06600 Ciudad de México, CDMX", source = "google",  zoom = 16, maptype = "roadmap", color = "color")
+
+ruta <- route(from = "Jesús García 271, Buenavista, 06350 Ciudad de México, CDMX, México", to = "Paseo de la Reforma, Juárez, 06600 Ciudad de México, Ciudad de México, México")
+
+ggmap(Mapa_CDMX) + 
+  geom_path(aes(x = startLon, y = startLat, xend = endLon, yend = endLat),
+            colour = "red", size = 2, data = ruta)
+
+```
+
+Para tener todos los datos recabados en los meses de enero hasta julio del 2018, se junta todo para así obtener el tiempo promedio que los usuarios utilizan el servicio de ecobici desde la estación 271 hasta la 27
+
+```{r}
+bicycle_history_ecobici <- rbind(January, February, March, April, May, June, July)
+```
+
+Ahora se agrega el tiempo que un usuario utilizo alguna bicicleta: 
+
+```{r}
+bicycle_history_ecobici <- bicycle_history_ecobici %>% 
+  mutate(duracion = as.duration(arr_datetime-re_datetime))
+bicycle_history_ecobici
+```
+
+Ahora, vease lo siguiente: 
+
+```{r}
+bicycle_history_ecobici %>% arrange(duracion)
+```
+
+Hay registros donde los usuarios tardarón 0 y hasta 1 segundo en dejar una bicicleta en estaciones distintas
+
+```{r}
+bicycle_history_ecobici %>% arrange(desc(duracion)) %>% filter(re_station != arr_station)
+```
+
+Hay registros donde los usuarios tardaron ¡AÑOS! en devolver una bicicleta, también semanas y hasta días; y no solo eso
+
+Esto muestra que hay registros que no tienen mucho sentido, por lo que se tomarán aquellos con una duración a 30 segundos de una estación a otra y aquellos que cumplan con el reglamento establecido de ecobici en cuanto a la duración reglamentaria, es decir, 45 minutos
+
+```{r}
+new_bicycle_history_ecobici <- bicycle_history_ecobici %>% filter(duracion <= dminutes(45))
+new_bicycle_history_ecobici <- new_bicycle_history_ecobici %>% filter(dseconds(30) <= duracion)
+new_bicycle_history_ecobici %>% arrange(duracion)
+```
+
+```{r}
+new_bicycle_history_ecobici %>% arrange(desc(duracion))
+```
+
+Con esta nueva limpieza, obtenemos aquellos registros entre las dos estaciones de estudio (271, 27)
+
+```{r}
+new_bicycle_history_ecobici %>% 
+  filter((re_station == 271 & arr_station == 27) | (re_station == 27 & arr_station == 271)) 
+```
+
+Y el tiempo promedio que hacen los usuarios en esta ruta es de: 
+
+```{r}
+new_bicycle_history_ecobici %>% 
+  filter((re_station == 271 & arr_station == 27) | (re_station == 27 & arr_station == 271)) %>%
+  summarise(tiempo_promedio = mean(duracion)) %>% 
+  mutate(tiempo_promedio = dseconds(tiempo_promedio))
+```
+
+Es natural preguntarse lo siguiente : ¿Si estoy en una parada, cuál es el promedio de tiempo que debería esperar para obtener una bicicleta en una estación dada?
+
+Lo siguiente se hará por horas
+
+```{r}
+median_by_station_hour <- function(estacion, hora){
+  fecha_aux <- make_datetime(2018, 8, 8, hora, 0,0)
+  resultado <- new_bicycle_history_ecobici %>% 
+    filter(arr_station == estacion) %>% 
+    mutate(hora = hour(arr_datetime), minutos = minute(arr_datetime)) %>% 
+    arrange(hora, minutos) %>% 
+    group_by(hora) %>% 
+    mutate(diferencia_tiempos = minutos -lag(minutos)) %>% 
+    dplyr::summarise(mean_minutes = mean(diferencia_tiempos, na.rm = TRUE)) %>% 
+    filter(hora == hour(fecha_aux))
+  resultado
+}
+```
+
+Por ejemplo, si me interesa la estación con id 271 y son las dos de la tarde con algunos minutos
+
+```{r}
+median_by_station_hour(271, 14)
+```
+
+Entonces a las 14 horas, en 0.037 minutos es el promedio de tiempo que tiene la estación registrada para que algún otro usuario regrese alguna bicicleta a la estación 271.
+
+Este valor es bajo aunque no raro ya que tomamos la estación con mayor número de registros.
+
+Por ejemplo, para otras estaciones, hay que esperar más: 
+
+```{r}
+median_by_station_hour(3000, 15)
+```
+
+Ya que la estación 271 es de las más importantes, una gráfica del comportamiento por horas ayuda a elegir una hora para tomar una bicicleta en esta estación
+
+```{r}
+all_time <- function(estacion){
+  resultado <- new_bicycle_history_ecobici %>% 
+    filter(arr_station == estacion) %>% 
+    mutate(hora = hour(arr_datetime), minutos = minute(arr_datetime)) %>% 
+    arrange(hora, minutos) %>% 
+    group_by(hora) %>% 
+    mutate(diferencia_tiempos = minutos -lag(minutos)) %>% 
+    dplyr::summarise(mean_minutes = mean(diferencia_tiempos, na.rm = TRUE))
+  return(resultado)
+}
+```
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+estacion_271 <- all_time(271) %>% 
+  ggplot(aes(x = hora, y = mean_minutes)) + 
+  geom_line() +
+  ggtitle("Espera en minutos sobre la estación 271 a lo largo del día")
+ggplotly(estacion_271)
+```
+
+Para la estación 27 se tiene el correspondiente gráfico
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+estacion_27 <- all_time(27) %>% 
+  ggplot(aes(x = hora, y = mean_minutes)) + 
+  geom_line() +
+  ggtitle("Espera en minutos sobre la estación 27 a lo largo del día")
+ggplotly(estacion_27)
+```
+
+Continuando con algunos otros datos, la siguiente gráfica muestra la proporción sobre el uso del servicio `ecobici` por edades registradas.
+
+Por convención, se omitirán aquellos datos en el cual la edad es mayor a 85 años
+
+```{r}
+new_bicycle_history_ecobici %>% 
+  filter(year_user < 85) %>% 
+  group_by(year_user) %>% 
+  dplyr::summarise(count = n()) %>% 
+  mutate(proportion = count/sum(count)) %>% 
+  ggplot(aes(x = year_user, y = proportion, fill = proportion)) +
+  geom_bar(stat = "identity") +
+  ggtitle("Proporción de uso del servicio sobre la edad de los usuarios ")
+```
+
+¿Cuáles son las horas más y menos comunes de servicio?  
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+by_hour <- new_bicycle_history_ecobici %>% 
+    mutate(hora = hour(arr_datetime)) %>% 
+    group_by(hora)  %>% 
+    dplyr::summarise(conteo = n()) %>% 
+  ggplot(aes(x = hora, y = conteo, fill = conteo)) +
+  geom_bar(stat = "identity")+
+  ggtitle("Cantidad de usuarios activos por hora")
+ggplotly(by_hour)
+```
+
+Solo para aclarar: 
+
+```{r}
+new_bicycle_history_ecobici %>% 
+  mutate(hora = hour(arr_datetime)) %>% 
+  group_by(hora)  %>% 
+  dplyr::summarise(conteo = n()) %>%
+  arrange(desc(conteo))
+```
+
+Para finalizar, algunas preguntas sobre el genero de los usuarios.
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+gender <- ggplot(new_bicycle_history_ecobici, aes(gender_user, fill = gender_user)) +
+  geom_bar() +
+  scale_x_discrete(drop = FALSE)+
+  ggtitle("Cantidad de usuarios por genero en los registros")
+ggplotly(gender)
+```
+
+Es notable la diferencia entre la cantidad de hombres que utilizan este servicio contra el genero femenino.
+
+Pero, con respecto a las horas, ¿Como se comporta la cantidad de mujeres y hombres que utilizan este servicio?
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+by_gender <- new_bicycle_history_ecobici %>% 
+  mutate(hora = hour(arr_datetime)) %>% 
+  group_by(hora, gender_user)  %>% 
+  dplyr::summarise(conteo = n())
+
+by_gender_hour <- ggplot(by_gender, aes(x = hora, y = conteo, color = gender_user)) + 
+  geom_line() +
+  facet_wrap(~ gender_user)
+
+ggplotly(by_gender_hour)
+```
+
+Como se aprecia, se tiene un comportamiento similar en cuanto a las horas, solo cambia la cantidad por genero.
+
