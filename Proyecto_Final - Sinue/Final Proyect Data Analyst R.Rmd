@@ -1,6 +1,6 @@
 ---
 title: "Final Proyect Data Analyst R"
-author: "Carlos Fernando Vásquez Guerra"
+author: "Carlos Fernando Vásquez Guerra y Sinué Salvador Flores Calderón"
 output:
   html_document:
     df_print: paged
@@ -54,7 +54,7 @@ library(plotly)
 db.host <- 'localhost'
 db.user <- 'root'
 db.port <- 3306
-db.password <- '5up3rm4n'
+db.password <- 'Calderon260'
 
 ## DB Connection
 db_connect <- function(db.name) {
@@ -74,6 +74,28 @@ db_connect <- function(db.name) {
 Nos interesa hacer un análisis sobre todos los datos por lo que, para evitar seleccionar todo por partes de cada tabla, se extraeran todos los datos de cada tabla.
 
 ```{r}
+install.packages("readr")
+install.packages("ggplot2")
+install.packages("stringr")
+install.packages("dplyr")
+install.packages("knitr")
+install.packages("tidyr")
+install.packages("lubridate")
+
+```
+
+```{r}
+library(readr)
+library(ggplot2)
+library(stringr)
+library(dplyr)
+library(knitr) #para generar una tabla cool en el reporte
+library(tidyr) #para manipulacion de datos
+library(lubridate)
+```
+
+
+```{r}
 January <- tbl(db_connect('ECOBICI'), "Enero") %>% collect()
 February <- tbl(db_connect('ECOBICI'), "Febrero") %>% collect()
 March <- tbl(db_connect('ECOBICI'), "Marzo") %>% collect()
@@ -83,13 +105,33 @@ June <- tbl(db_connect('ECOBICI'), "Junio") %>% collect()
 July <- tbl(db_connect('ECOBICI'), "Julio") %>% collect()
 ```
 
+```{r}
+January <- read_csv("data/2018-01.csv",col_names = T, na = c(""," ", "NA", "?"))
+February <- read_csv("data/2018-02.csv",col_names = T, na = c(""," ", "NA", "?"))
+March <- read_csv("data/2018-03.csv",col_names = T, na = c(""," ", "NA", "?"))
+April <- read_csv("data/2018-04.csv",col_names = T, na = c(""," ", "NA", "?"))
+May <- read_csv("data/2018-05.csv",col_names = T, na = c(""," ", "NA", "?"))
+June <- read_csv("data/2018-06.csv",col_names = T, na = c(""," ", "NA", "?"))
+July <- read_csv("data/2018-07.csv",col_names = T, na = c(""," ", "NA", "?"))
+```
+
 Ahora, un poco de limpieza
+
+
+Mi enfoque se basa en los días de la semana donde ocurre más de algo, por ejemplo empezaré con los días donde la gente toma y deja más la bici en madrugada:
+
+
+Después los días donde la gente toma más y menos una bicicleta, obteniendo la ubicación a través de la API de ecobici y puesta en el mapa
+
+Ahora quienes usan más las bicis, si hombres o mujeres
 
 ```{r}
 January
 ```
 
 Con la siguiente función se modificará el tipo de dato en `gender_user` y se colapsará los datos de tiempo y fecha en un sólo dato para los tiempos de arrivo y los tiempos de retiro registrados
+
+
 
 ```{r}
 gender_arr_fix <- function(data){
@@ -282,7 +324,7 @@ Ahora, surgen varias preguntas o issues sobre los datos.
 
 ##EDA
 
-¿Dónde se ubican las estaciones más recurrentes? Es decir, las estaciones con el id 27 y 271.
+Â¿Dónde se ubican las estaciones más recurrentes? Es decir, las estaciones con el id 27 y 271.
 
 Un mapa de todas las `cicloestaciones` se encuentra en la página oficial de ecobici, aunque en esta [liga](https://www.ecobici.cdmx.gob.mx/sites/default/files/pdf/mapa_web_opt_0.pdf) se encuentra el archivo correspondiente.
 
@@ -363,7 +405,7 @@ Hay registros donde los usuarios tardarón 0 y hasta 1 segundo en dejar una bici
 bicycle_history_ecobici %>% arrange(desc(duracion)) %>% filter(re_station != arr_station)
 ```
 
-Hay registros donde los usuarios tardaron ¡AÑOS! en devolver una bicicleta, también semanas y hasta días; y no solo eso
+Hay registros donde los usuarios tardaron Â¡AÃOS! en devolver una bicicleta, también semanas y hasta días; y no solo eso
 
 Esto muestra que hay registros que no tienen mucho sentido, por lo que se tomarán aquellos con una duración a 30 segundos de una estación a otra y aquellos que cumplan con el reglamento establecido de ecobici en cuanto a la duración reglamentaria, es decir, 45 minutos
 
@@ -393,7 +435,7 @@ new_bicycle_history_ecobici %>%
   mutate(tiempo_promedio = dseconds(tiempo_promedio))
 ```
 
-Es natural preguntarse lo siguiente : ¿Si estoy en una parada, cuál es el promedio de tiempo que debería esperar para obtener una bicicleta en una estación dada?
+Es natural preguntarse lo siguiente : Â¿Si estoy en una parada, cuál es el promedio de tiempo que debería esperar para obtener una bicicleta en una estación dada?
 
 Lo siguiente se hará por horas
 
@@ -476,7 +518,7 @@ new_bicycle_history_ecobici %>%
   ggtitle("Proporción de uso del servicio sobre la edad de los usuarios ")
 ```
 
-¿Cuáles son las horas más y menos comunes de servicio?  
+Â¿Cuáles son las horas más y menos comunes de servicio?  
 
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 by_hour <- new_bicycle_history_ecobici %>% 
@@ -511,7 +553,7 @@ ggplotly(gender)
 
 Es notable la diferencia entre la cantidad de hombres que utilizan este servicio contra el genero femenino.
 
-Pero, con respecto a las horas, ¿Como se comporta la cantidad de mujeres y hombres que utilizan este servicio?
+Pero, con respecto a las horas, Â¿Como se comporta la cantidad de mujeres y hombres que utilizan este servicio?
 
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 by_gender <- new_bicycle_history_ecobici %>% 
@@ -528,3 +570,75 @@ ggplotly(by_gender_hour)
 
 Como se aprecia, se tiene un comportamiento similar en cuanto a las horas, solo cambia la cantidad por genero.
 
+Interacción con API
+```{r}
+#install.packages(httr)
+library(httr)
+ecobici_api <- function(path) {
+  url <- modify_url("https://pubsbapi.smartbike.com", path = path)
+  
+  resp <- GET(url)
+  if (http_type(resp) != "application/json") {
+    stop("API did not return json", call. = FALSE)
+  }
+  
+  parsed <- jsonlite::fromJSON(content(resp, "text"), simplifyVector = FALSE)
+  
+  if (http_error(resp)) {
+    stop(
+      sprintf(
+        "Ecobici API request failed [%s]\n%s\n<%s>", 
+        status_code(resp),
+        parsed$message,
+        parsed$documentation_url
+      ),
+      call. = FALSE
+    )
+  }
+  
+  structure(
+    list(
+      content = parsed,
+      path = path,
+      response = resp
+    ),
+    class = "ecobici_api"
+  )
+}
+
+print.github_api <- function(x, ...) {
+  cat("<Ecobici ", x$path, ">\n", sep = "")
+  str(x$content)
+  invisible(x)
+}
+
+ecobici_api("/api/v1/stations.json?access_token=OTcyMmJkYjUxYWM4MzQzMjQ0YTU3Njk3MjNkYzkyNWJmYzIwNjVkZTcyYTJlMjM3Yzg3NmQ1YTUwZGY2MGFmYg")
+```
+
+Búsqueda de twits relacionados con ecobici
+```{r, message=FALSE, warning=FALSE}
+# creamos una llave en https://dev.twitter.com/apps
+consumer_key = "ZLzGFM9OTAR7qajKGxOIaTclA";
+consumer_secret = "JHdpn58t2poNdAH5xAdaKk7T3XfQmDiL7WHtylkAaRb4kxLJgz";
+
+# usamos auth básico
+secret <- jsonlite::base64_enc(paste(consumer_key, consumer_secret, sep = ":"))
+req <- httr::POST("https://api.twitter.com/oauth2/token",
+  httr::add_headers(
+    "Authorization" = paste("Basic", gsub("\n", "", secret)),
+    "Content-Type" = "application/x-www-form-urlencoded;charset=UTF-8"
+  ),
+  body = "grant_type=client_credentials"
+);
+
+# extraemos el token de acceso
+httr::stop_for_status(req, "authenticate with twitter")
+token <- paste("Bearer", httr::content(req)$access_token)
+
+# llamada al API
+url <- "https://api.twitter.com/1.1/search/tweets.json?q=ecobici&result_type=mixed"
+req <- httr::GET(url, httr::add_headers(Authorization = token))
+json <- httr::content(req, as = "text")
+tweets <- jsonlite::fromJSON(json)
+substring(tweets$statuses$text, 1, 100)
+```
